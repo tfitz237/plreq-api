@@ -1,37 +1,35 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Post, Body } from '@nestjs/common';
 import { JdService, jdConnectResponse, jdInit, jdLink, jdPackage } from './jd.service';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard())
 @Controller('jd')
 export class JdController {
     constructor(private readonly jdService: JdService) {}
 
     @Get('connect')
-    connect(): Promise<jdConnectResponse> {
-        return this.jdService.connect().then(response => response);
+    async connect(): Promise<jdConnectResponse> {
+        return await this.jdService.connect();
         
-    }
-    @Get('devices')
-    devices(): Promise<string> {
-        return this.jdService.listDevices().then(response => response);
     }
 
     @Get('init')
-    init(): Promise<jdInit> {
-        return this.jdService.initiate().then(response => response);
-    }
-
-    @Get('links')
-    links(): Promise<jdLink[]> {
-        return this.jdService.getLinks().then(response => response);
+    async init(): Promise<jdInit> {
+        return await this.jdService.initiate();
     }
 
     @Get('packages/:uuid')
-    packages(@Param() params): Promise<jdPackage[]|jdInit> {
-        return this.jdService.getPackages(true, params.uuid).then(response => response);
+    async  packages(@Param() params): Promise<jdPackage[]|jdInit> {
+        return await this.jdService.getPackages(true, params.uuid);
     }
     
     @Get('packages')
-    package(): Promise<jdPackage[]|jdInit> {
-        return this.jdService.getPackages(true).then(response => response);
+    async package(): Promise<jdPackage[]|jdInit> {
+        return await this.jdService.getPackages(true);
+    }
+
+    @Post('add-links')
+    async addLinks(@Body() links: string[]) {
+        return await this.jdService.addLinks(links, true);
     }
 }

@@ -8,150 +8,166 @@ export class JdService {
     links: jdLink[] = [];
     get isInitiated() : boolean { return this.isConnected && !!this.deviceId };
 
-    connect(): Promise<jdConnectResponse> {
+    async connect(): Promise<jdConnectResponse> {
         let file;
         try {
-            file = fs.readFileSync('jd.credentials.json', 'utf8');
+            file = fs.readFileSync('credentials.json', 'utf8');
         } catch (e) {
-            return new Promise(resolve => resolve({ connected: false, error: { src: 'fs', type: e}}));
+            return Promise.resolve({ connected: false, error: { src: 'fs', type: e}});
         }
-        var creds = JSON.parse(file);
-        return jdApi.connect(creds.email, creds.password)
-                    .then(response => {
-                        if (response === true) {   
-                            this.isConnected = true;                         
-                            return {
-                                connected: true
-                            };
-                        } else {
-                            return {
-                                connected: false,
-                                error: response.error
-                            };
-                        }
-                    }).catch(response=> {
-                        return {
-                            connected: false,
-                            error: JSON.parse(response.error)
-                        }
-                    });
+        const creds = JSON.parse(file);
+        try {
+            const response = await jdApi.connect(creds.jd.email, creds.jd.password);
+            if (response === true) {   
+                this.isConnected = true;                         
+                return {
+                    connected: true
+                };
+            } else {
+                return {
+                    connected: false,
+                    error: response.error
+                };
+            }
+        }
+        catch (response) {
+            return {
+                connected: false,
+                error: JSON.parse(response.error)
+            }
+        }
     }
 
-    initiate(): Promise<jdInit> {
+    async initiate(): Promise<jdInit> {
         if (this.isInitiated) {
-            return new Promise((resolve) => resolve({
-                id: null,
+            return {
+                id: this.deviceId,
+                success: true,
+            };
+        }
+        const response = !this.isConnected ? await this.connect() : {connected: true};
+        
+        if (!response.connected) {
+            return {
+                success: false,
+                error: response.error
+            }
+        }
+        const deviceId = await this.listDevices();
+        if (deviceId) {
+            return {
+                id: deviceId,
                 success: true,
                 error: null
-            }));
-        }
-        if (!this.isConnected) {
-            return this.connect().then(response => {
-                if (response.connected) {
-                    return this.listDevices().then(deviceId => {
-                        if (deviceId) {
-                            return {
-                                id: deviceId,
-                                success: true,
-                                error: null
-                            }
-                        } else {
-                            return {
-                                id: null,
-                                success: true,
-                                error: {
-                                    src: "API",
-                                    type: "NO_DEVICES_FOUND"
-                                }
-                            }
-                        }
-                    });
-                } else {
-                    return {
-                        success: false,
-                        id: null,
-                        error: response.error
-                    }
-                }
-            })
+            };
         } else {
-            return this.listDevices().then(deviceId => {
-                if (!deviceId) {
-                    return {
-                        id: deviceId,
-                        success: true,
-                        error: null
-                    }
+            return {
+                id: null,
+                success: true,
+                error: {
+                    src: "API",
+                    type: "NO_DEVICES_FOUND"
                 }
-            });
+            };
         }
+        
     }
 
-    listDevices(): Promise<string> {
+    private async listDevices(): Promise<string> {
         if (!this.deviceId) {
-            return jdApi.listDevices().then(devices => {
+            try {
+                const devices = await jdApi.listDevices();
                 if (devices.length > 0) {
                     this.deviceId = devices[0].id;
                     return devices[0].id;
                 }
-                return null;
-            }).catch(err => {
-                return null;
-            })
+            }
+            catch {}
+            return null;
+                
+        } else {
+            return this.deviceId;
         }
 
     }
 
-    getLinks(): Promise<jdLink[]> {
-        return this.initiate().then(response => {
-            if (response.success) {
-                return jdApi.queryLinks(this.deviceId).then(links => {
-                    this.links = links.data;
-                    return links.data;
-                });
-            }
-        });
+    private async getLinks(): Promise<jdLink[]> {
+        const response = await this.initiate()
+        if (response.success) {
+            try {
+                const links = await jdApi.queryLinks(this.deviceId)
+                this.links = links.data;
+                return links.data;
+            } 
+            catch {}           
+        }
+        return [];
     }
-    getPackages(cached: boolean = false, uuids: string = null): Promise<jdPackage[]|jdInit> {
-        return this.initiate().then(response => {
-            if (response.success) {
-                var packages;
-                if (uuids) {
-                    packages = uuids;
-                }
-                if (cached && this.links.length > 0) {
-                    packages = Array.from(new Set(this.links.map(link => link.packageUUID)));
-                }
-                if (packages) {
-                    return jdApi.queryPackages(this.deviceId, packages).then(pck => {
-                        return pck.data
-                    });
-                }
 
-                return this.getLinks().then(links => {
-                    var packageUUIDs = Array.from(new Set(this.links.map(link => link.packageUUID)));
-
-                    return jdApi.queryPackages(this.deviceId, packageUUIDs).then(packages => {
-                        return packages.data
-                    });
-                })
-            } else {
-                return response;
+    async getPackages(cached: boolean = false, uuids: string = null): Promise<jdPackage[]|jdInit> {
+        const response = await this.initiate();
+        if (response.success) {
+            var packages;
+            if (uuids) {
+                packages = uuids;
             }
-        })
+            if (cached && this.links.length > 0) {
+                packages = Array.from(new Set(this.links.map(link => link.packageUUID)));
+            } else {
+                try {
+                    packages = Array.from(new Set((await this.getLinks()).map(link => link.packageUUID)));
+                }
+                catch {}
+            }
+            if (packages) {
+                try {
+                    const pck = await jdApi.queryPackages(this.deviceId, packages);
+                    return pck.data;
+                } catch {}
+            }
+
+            return {
+                success: false,
+                error: {
+                    src: 'api',
+                    type: 'UUIDs not found'
+                }
+            };
+        } else {
+            return response;
+        }
+    }
+
+    async addLinks(links: string[], autoStart: boolean = true): Promise<jdInit> {
+        const response = await this.initiate();
+        if (response.success) {
+            const linksString = links.join(',');
+            let resp;
+            try {
+                resp = await jdApi.addLinks(linksString, this.deviceId, autoStart);
+                return { success: true};
+            } catch (e) {
+                return {
+                    success: false,
+                    error: e.error
+                }
+            }
+        } else {
+            return response;
+        }
     }
 
 }
 
 export interface jdConnectResponse {
     connected: boolean;
-    error: Error
+    error?: Error
 }
 
 export interface jdInit {
-    id: string,
+    id?: string,
     success: boolean;
-    error: Error
+    error?: Error
 }
 
 export interface Error {
