@@ -1,5 +1,6 @@
 import { Controller, Get, Param, UseGuards, Post, Body } from '@nestjs/common';
-import { JdService, jdConnectResponse, jdInit, jdPackage } from './jd.service';
+import { JdService } from './jd.service';
+import { jdConnectResponse, jdInit, jdPackage } from "models/jdownloader";
 import { AuthGuard } from '@nestjs/passport';
 
 @UseGuards(AuthGuard())
@@ -9,8 +10,7 @@ export class JdController {
 
     @Get('connect')
     async connect(): Promise<jdConnectResponse> {
-        return await this.jdService.connect();
-        
+        return await this.jdService.connect();        
     }
 
     @Get('init')
@@ -19,8 +19,8 @@ export class JdController {
     }
 
     @Get('packages/:uuid')
-    async  packages(@Param() params): Promise<jdPackage[]|jdInit> {
-        return await this.jdService.getPackages(true, params.uuid);
+    async  packages(@Param('uuid') uuid): Promise<jdPackage[]|jdInit> {
+        return await this.jdService.getPackages(true, uuid);
     }
     
     @Get('packages')
@@ -31,5 +31,10 @@ export class JdController {
     @Post('add-links')
     async addLinks(@Body() links: string[]) {
         return await this.jdService.addLinks(links, true);
+    }
+
+    @Get('progress/:uuid')
+    async progress(@Param('uuid') uuid): Promise<any> {
+        return await this.jdService.getProgress(uuid);
     }
 }

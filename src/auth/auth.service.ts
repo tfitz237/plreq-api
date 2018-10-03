@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as pwHash from 'password-hash';
 import { JwtService } from '@nestjs/jwt';
+import { iUser } from '../models/user';
 
 
 export enum UserLevel {
@@ -35,12 +36,6 @@ const Users : iUser[] = [
     }
 ]
 
-export interface iUser {
-    username: string;
-    password: string;
-    userGuid: string;
-    level: number;
-}
 
 function guid() {
     function s4() {

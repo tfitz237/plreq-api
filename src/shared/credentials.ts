@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { Error } from '../jd/jd.service';
+import { Error } from "../models/status";
 import { Injectable } from '@nestjs/common';
 
 //@Injectable()

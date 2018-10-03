@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
 import Credentials from '../shared/credentials';
+import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
 @Injectable()
 export class JdService {
     isConnected: boolean = false;
@@ -119,6 +120,7 @@ export class JdService {
             if (packages) {
                 try {
                     const pck = await jdApi.queryPackages(this.deviceId, packages);
+                    pck.data = pck.data.map(this.addPackageDetails);
                     return pck.data;
                 } catch {}
             }
@@ -135,10 +137,31 @@ export class JdService {
         }
     }
 
+    async getProgress(uuid: string): Promise<any> {
+        var pack = await this.getPackages(true, uuid);
+        return {
+            progressPercent: pack[0].progress + '%',
+            eta: pack[0].eta,
+            speedInMb: pack[0].speedInMb + 'mb/s'
+        }
+    }
+
+    private addPackageDetails(pack: jdPackage) {        
+        pack.progress = Math.round(pack.bytesLoaded / pack.bytesTotal * 10000) / 100;
+        pack.speedInMb = Math.round(pack.speed / 10000) / 100;
+        var fullSeconds = (pack.bytesTotal - pack.bytesLoaded) / pack.speed;
+        var minutes = fullSeconds / 60;
+        var seconds = Math.floor(minutes) - Math.round(Math.floor(minutes) * 100) / 100 / 60;
+        pack.eta = Math.floor(minutes) + 'm' + Math.floor(seconds) + 's';
+        
+        return pack;
+        
+    }
+
     async addLinks(links: string[], autoStart: boolean = true): Promise<jdInit> {
         const response = await this.initiate();
         if (response.success) {
-            const linksString = links.join(',');
+            const linksString = links.join(' ');
             let resp;
             try {
                 resp = await jdApi.addLinks(linksString, this.deviceId, autoStart);
@@ -156,33 +179,3 @@ export class JdService {
 
 }
 
-export interface jdConnectResponse {
-    connected: boolean;
-    error?: Error
-}
-
-export interface jdInit {
-    id?: string,
-    success: boolean;
-    error?: Error
-}
-
-export interface Error {
-    src: string;
-    type: string;
-}
-
-export interface jdLink {
-    name: string,
-    packageUUID: number,
-    uuid: number
-}
-
-export interface jdPackage {
-    bytesLoaded: number;
-    name: string;
-    finished: boolean;
-    uuid: number;
-    enabled: true;
-    status: string;
-}
