@@ -22,9 +22,13 @@ export interface jdPackage {
     uuid: number;
     enabled: true;
     status: string;
-    progress: number;
+    progressPercent: number;
     speedInMb: number;
     speed: number;
     bytesTotal: number;
-    eta: string;
+    progress: {
+        percent: string;
+        eta: string;
+        speedInMb: string;
+    }
 }

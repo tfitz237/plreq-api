@@ -137,23 +137,18 @@ export class JdService {
         }
     }
 
-    async getProgress(uuid: string): Promise<any> {
-        var pack = await this.getPackages(true, uuid);
-        return {
-            progressPercent: pack[0].progress + '%',
-            eta: pack[0].eta,
-            speedInMb: pack[0].speedInMb + 'mb/s'
-        }
-    }
 
     private addPackageDetails(pack: jdPackage) {        
-        pack.progress = Math.round(pack.bytesLoaded / pack.bytesTotal * 10000) / 100;
+        pack.progressPercent = Math.round(pack.bytesLoaded / pack.bytesTotal * 10000) / 100;
         pack.speedInMb = Math.round(pack.speed / 10000) / 100;
         var fullSeconds = (pack.bytesTotal - pack.bytesLoaded) / pack.speed;
         var minutes = fullSeconds / 60;
         var seconds = Math.floor(minutes) - Math.round(Math.floor(minutes) * 100) / 100 / 60;
-        pack.eta = Math.floor(minutes) + 'm' + Math.floor(seconds) + 's';
-        
+        pack.progress = {
+            percent: pack.progressPercent + '%',
+            eta: Math.floor(minutes) + 'm' + Math.floor(seconds) + 's',
+            speedInMb: pack.speedInMb + 'mb/s'
+        }
         return pack;
         
     }

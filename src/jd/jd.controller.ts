@@ -32,9 +32,4 @@ export class JdController {
     async addLinks(@Body() links: string[]) {
         return await this.jdService.addLinks(links, true);
     }
-
-    @Get('progress/:uuid')
-    async progress(@Param('uuid') uuid): Promise<any> {
-        return await this.jdService.getProgress(uuid);
-    }
 }
