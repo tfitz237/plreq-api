@@ -8,6 +8,7 @@ export interface jdInit {
     id?: string;
     success: boolean;
     error?: Error;
+    packages?: jdPackage[];
 }
 
 export interface jdLink {

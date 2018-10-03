@@ -8,9 +8,16 @@ export class JdService {
     deviceId: string;
     links: jdLink[] = [];
     creds: Credentials;
-    get isInitiated() : boolean { return this.isConnected && !!this.deviceId };
+    packageUuids: string[];
+    packages: jdPackage[] = [];
      
-    constructor() {this.creds = new Credentials();}
+    pollPackages: boolean;
+    constructor() {
+        this.creds = new Credentials();
+        this.pollPackages = true; 
+    }
+
+    get isInitiated() : boolean { return this.isConnected && !!this.deviceId };
 
     async connect(): Promise<jdConnectResponse> {
 
@@ -41,6 +48,7 @@ export class JdService {
             return {
                 id: this.deviceId,
                 success: true,
+                packages: this.packages
             };
         }
         const response = !this.isConnected ? await this.connect() : {connected: true};
@@ -53,10 +61,16 @@ export class JdService {
         }
         const deviceId = await this.listDevices();
         if (deviceId) {
+            var packages = <jdPackage[]>(await this.getPackages());
+
+            if (this.pollPackages) {
+                this.setupPollingCache();
+            }
+
             return {
                 id: deviceId,
                 success: true,
-                error: null
+                packages: packages
             };
         } else {
             throw new HttpException({
@@ -69,6 +83,14 @@ export class JdService {
         }
         
     }
+
+    private setupPollingCache() {
+        this.pollPackages = false;
+        setInterval(() => {
+            this.getPackages(false, null, false);
+        }, 2000);
+    }
+
 
     private async listDevices(): Promise<string> {
         if (!this.deviceId) {
@@ -101,14 +123,17 @@ export class JdService {
         return [];
     }
 
-    async getPackages(cached: boolean = false, uuids: string = null): Promise<jdPackage[]|jdInit> {
+    async getPackages(cachedLinks: boolean = false, uuids: string = null, cachedPackages: boolean = true): Promise<jdPackage[]|jdInit> {
+        if (cachedPackages && this.packages.length > 0) {
+            return this.packages;
+        }
         const response = await this.initiate();
         if (response.success) {
             var packages;
             if (uuids) {
                 packages = uuids;
             }
-            if (cached && this.links.length > 0) {
+            if (cachedLinks && this.links.length > 0) {
                 packages = Array.from(new Set(this.links.map(link => link.packageUUID)));
             } else {
                 try {
@@ -120,6 +145,9 @@ export class JdService {
                 try {
                     const pck = await jdApi.queryPackages(this.deviceId, packages);
                     pck.data = pck.data.map(this.addPackageDetails);
+
+                    this.packageUuids = packages;
+                    this.packages = pck.data;
                     return pck.data;
                 } catch {}
             }
