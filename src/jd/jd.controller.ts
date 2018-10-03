@@ -1,5 +1,5 @@
 import { Controller, Get, Param, UseGuards, Post, Body } from '@nestjs/common';
-import { JdService, jdConnectResponse, jdInit, jdLink, jdPackage } from './jd.service';
+import { JdService, jdConnectResponse, jdInit, jdPackage } from './jd.service';
 import { AuthGuard } from '@nestjs/passport';
 
 @UseGuards(AuthGuard())

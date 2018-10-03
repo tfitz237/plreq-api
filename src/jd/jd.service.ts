@@ -1,23 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
-import * as fs from 'fs';
+import Credentials from '../shared/credentials';
 @Injectable()
 export class JdService {
     isConnected: boolean = false;
     deviceId: string;
     links: jdLink[] = [];
+    creds: Credentials;
     get isInitiated() : boolean { return this.isConnected && !!this.deviceId };
+     
+    constructor() {this.creds = new Credentials();}
 
     async connect(): Promise<jdConnectResponse> {
-        let file;
+
         try {
-            file = fs.readFileSync('credentials.json', 'utf8');
-        } catch (e) {
-            return Promise.resolve({ connected: false, error: { src: 'fs', type: e}});
-        }
-        const creds = JSON.parse(file);
-        try {
-            const response = await jdApi.connect(creds.jd.email, creds.jd.password);
+            const response = await jdApi.connect(this.creds.jd.email, this.creds.jd.password);
             if (response === true) {   
                 this.isConnected = true;                         
                 return {
