@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
 import Credentials from '../shared/credentials';
 import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
@@ -22,17 +22,17 @@ export class JdService {
                     connected: true
                 };
             } else {
-                return {
+                throw new HttpException({
                     connected: false,
                     error: response.error
-                };
+                }, 400);;
             }
         }
         catch (response) {
-            return {
+            throw new HttpException({
                 connected: false,
                 error: JSON.parse(response.error)
-            }
+            }, 400);
         }
     }
 
@@ -46,10 +46,10 @@ export class JdService {
         const response = !this.isConnected ? await this.connect() : {connected: true};
         
         if (!response.connected) {
-            return {
+            throw new HttpException({
                 success: false,
                 error: response.error
-            }
+            }, 400);
         }
         const deviceId = await this.listDevices();
         if (deviceId) {
@@ -59,14 +59,13 @@ export class JdService {
                 error: null
             };
         } else {
-            return {
-                id: null,
-                success: true,
+            throw new HttpException({
+                success: false,
                 error: {
                     src: "API",
                     type: "NO_DEVICES_FOUND"
                 }
-            };
+            }, 400)
         }
         
     }
@@ -125,15 +124,16 @@ export class JdService {
                 } catch {}
             }
 
-            return {
+            throw new HttpException({
                 success: false,
                 error: {
                     src: 'api',
                     type: 'UUIDs not found'
                 }
-            };
+            }, 400)
+
         } else {
-            return response;
+            throw new HttpException(response, 400);
         }
     }
 
@@ -162,13 +162,13 @@ export class JdService {
                 resp = await jdApi.addLinks(linksString, this.deviceId, autoStart);
                 return { success: true};
             } catch (e) {
-                return {
+                throw new HttpException({
                     success: false,
                     error: e.error
-                }
+                }, 400);
             }
         } else {
-            return response;
+            throw new HttpException(response, 400);
         }
     }
 
