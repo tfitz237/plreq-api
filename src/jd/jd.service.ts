@@ -2,6 +2,7 @@ import { Injectable, HttpException } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
 import Credentials from '../shared/credentials';
 import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
+import FileService from 'shared/file';
 @Injectable()
 export class JdService {
     isConnected: boolean = false;
@@ -12,7 +13,7 @@ export class JdService {
     packages: jdPackage[] = [];
      
     pollPackages: boolean;
-    constructor() {
+    constructor(private readonly fileService: FileService) {
         this.creds = new Credentials();
         this.pollPackages = true; 
     }
@@ -86,11 +87,19 @@ export class JdService {
 
     private setupPollingCache() {
         this.pollPackages = false;
-        setInterval(() => {
-            this.getPackages(false, null, false);
+        setInterval(async () => {
+            await this.getPackages(false, null, false);
+            if (this.packagesFinished(true)) {
+                this.fileService.moveVideos();
+            }
         }, 2000);
     }
-
+   
+    private packagesFinished(stopOnExtracted: boolean): boolean {
+        return this.packages.every(pack => {           
+            return stopOnExtracted ? pack.finished || !pack.status.includes('Extracting') : pack.finished;
+        })
+    }
 
     private async listDevices(): Promise<string> {
         if (!this.deviceId) {
@@ -164,7 +173,6 @@ export class JdService {
             throw new HttpException(response, 400);
         }
     }
-
 
     private addPackageDetails(pack: jdPackage) {        
         pack.progressPercent = Math.round(pack.bytesLoaded / pack.bytesTotal * 10000) / 100;
