@@ -18,7 +18,7 @@ export default class FileService {
     }
     
 
-    async moveVideos() {  
+    async moveVideos(): Promise<boolean> {  
         var files = this.getFiles(this.dir);
         for(var i in files) {
             var file = files[i];
@@ -28,21 +28,27 @@ export default class FileService {
                     const dir = path.join(this.tvDestination, name.title);
                     await fs.ensureDir(dir);                    
                     
-                    fs.move(file, path.join(dir, path.basename(file))).then(() => {
+                    try {
+                        await fs.move(file, path.join(dir, path.basename(file)));
                         console.log('moved ' + file + ' to TV Shows');
-                    }).catch((err) => {
+                    } catch(err) {
                         console.error(err);
-                    });;
+                        return false;
+                    }
                 } else {
                     const dir = this.movieDestination;
-                    fs.move(file, path.join(dir, path.basename(file))).then(() => {
+                    try {
+                        await fs.move(file, path.join(dir, path.basename(file)));
                         console.log('moved ' + file + ' to Movies');
-                    }).catch((err) => {
+                    } catch(err) {
                         console.error(err);
-                    });
+                        return false;
+                    }
                 }
             }
         }
+
+        return true;
     }
 
 

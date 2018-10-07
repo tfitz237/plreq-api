@@ -63,7 +63,7 @@ export class JdService {
         const deviceId = await this.listDevices();
         if (deviceId) {
             var packages = <jdPackage[]>(await this.getPackages());
-
+            await this.movePackages();
             if (this.pollPackages) {
                 this.setupPollingCache();
             }
@@ -89,16 +89,37 @@ export class JdService {
         this.pollPackages = false;
         setInterval(async () => {
             await this.getPackages(false, null, false);
-            if (this.packagesFinished(true)) {
-                this.fileService.moveVideos();
-            }
         }, 2000);
+        setInterval(async () => {
+            await this.movePackages();
+        }, 60000);
+    }
+
+    async movePackages(): Promise<void> {
+        if (this.packagesFinished(true)) {
+            if (await this.fileService.moveVideos()) {
+                const cleaned = await this.cleanUp();
+            }
+        }
     }
    
     private packagesFinished(stopOnExtracted: boolean): boolean {
         return this.packages.every(pack => {           
             return stopOnExtracted ? pack.finished || !pack.status.includes('Extracting') : pack.finished;
         })
+    }
+
+
+    private async cleanUp(): Promise<boolean> {     
+        try {
+            const result = await jdApi.cleanUp(this.deviceId);
+            if (result) {
+                return true;
+            }
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
     }
 
     private async listDevices(): Promise<string> {
