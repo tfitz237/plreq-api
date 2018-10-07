@@ -104,9 +104,14 @@ export class JdService {
     }
    
     private packagesFinished(stopOnExtracted: boolean): boolean {
-        return this.packages.every(pack => {           
-            return stopOnExtracted ? pack.finished || !pack.status.includes('Extracting') : pack.finished;
-        })
+        const finished = this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK"));
+        if (finished.length > 0) {
+            if (stopOnExtracted) {                
+                const extracting = this.packages.filter(pack => pack.status && pack.status.includes('Extracting'));
+                return extracting.length == 0;
+            }
+            return true;
+        }
     }
 
 
