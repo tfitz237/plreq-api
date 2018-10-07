@@ -1,20 +1,20 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
-import Credentials from '../shared/credentials';
+import Configuration from '../-';
 import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
-import FileService from 'shared/file';
+import FileService from '../shared/file';
 @Injectable()
 export class JdService {
     isConnected: boolean = false;
     deviceId: string;
     links: jdLink[] = [];
-    creds: Credentials;
+    creds: Configuration;
     packageUuids: string[];
     packages: jdPackage[] = [];
      
     pollPackages: boolean;
     constructor(private readonly fileService: FileService) {
-        this.creds = new Credentials();
+        this.creds = new Configuration();
         this.pollPackages = true; 
     }
 

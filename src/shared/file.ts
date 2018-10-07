@@ -1,27 +1,45 @@
 import * as fs from 'fs-extra';
 import * as parse from 'parse-torrent-name';
 import { Injectable } from '@nestjs/common';
-
+import * as path from 'path';
+import Configuration from './configuration';
 @Injectable()
 export default class FileService {
+    dir: string;
+    tvDestination: string;
+    movieDestination: string;
 
-    dir = '/media/strong/User/Downloads/';
-    tvDestination = '/media/strong/User/Videos/TV Shows/';
-    movieDestination = '/media/strong/User/Videos/Movies/';
+    constructor() {
+        const config = new Configuration().filePaths;
+        this.dir = config.dir;
+        this.tvDestination = config.tvDestination;
+        this.movieDestination = config.movieDestination;
+
+    }
+    
 
     async moveVideos() {  
         var files = this.getFiles(this.dir);
         for(var i in files) {
             var file = files[i];
-            var name = this.parseName(file);
+            var name = this.parseName(path.basename(file));
             if (name.isVideo) {
                 if (name.isTv) {
-                    await fs.ensureDir(this.tvDestination + name.title + '/');                    
-                    console.log('moved ' + file + ' to TV Shows');
-                    fs.move(file, this.tvDestination + name.title + '/');
+                    const dir = path.join(this.tvDestination, name.title);
+                    await fs.ensureDir(dir);                    
+                    
+                    fs.move(file, path.join(dir, path.basename(file))).then(() => {
+                        console.log('moved ' + file + ' to TV Shows');
+                    }).catch((err) => {
+                        console.error(err);
+                    });;
                 } else {
-                    console.log('moved ' + file + ' to Movies');
-                    fs.move(file, this.movieDestination);
+                    const dir = this.movieDestination;
+                    fs.move(file, path.join(dir, path.basename(file))).then(() => {
+                        console.log('moved ' + file + ' to Movies');
+                    }).catch((err) => {
+                        console.error(err);
+                    });
                 }
             }
         }
@@ -30,10 +48,10 @@ export default class FileService {
 
     parseName(fileName: string) {
         const parsed = parse(fileName);
-        let match = fileName.match(/.*\.(avi|AVI|wmv|WMV|flv|FLV|mpg|MPG|mp4|MP4)/);
+        let match = fileName.match(/.*\.(avi|AVI|wmv|WMV|flv|FLV|mpg|MPG|mp4|MP4|mkv|MKV|mpeg|MPEG)/);
         parsed.isVideo = match != null;
-        parsed.isTv = parsed.season || parsed.episode;
-        return parse(fileName);
+        parsed.isTv = (parsed.season || parsed.episode) !== undefined;
+        return parsed;
     }
 
 

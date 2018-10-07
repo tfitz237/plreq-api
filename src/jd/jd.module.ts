@@ -2,11 +2,12 @@ import { Module, UseGuards } from '@nestjs/common';
 import { JdService } from './jd.service';
 import { JdController } from './jd.controller';
 import { AuthModule } from '../auth/auth.module';
+import FileService from '../shared/file';
 
 
 @Module({
     imports: [AuthModule],
     controllers: [JdController, ],
-    providers: [JdService,]
+    providers: [JdService, FileService]
 })
 export class JdModule {}

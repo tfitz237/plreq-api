@@ -4,12 +4,12 @@ import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
-import Credentials from '../shared/credentials';
+import Configuration from '../shared/configuration';
 @Module({
     imports: [
         PassportModule.register({ defaultStrategy: 'jwt' }), 
         JwtModule.register({
-            secretOrPrivateKey: new Credentials().jwt.secret,
+            secretOrPrivateKey: new Configuration().jwt.secret,
             signOptions: {
                 expiresIn: 3600,
             },
