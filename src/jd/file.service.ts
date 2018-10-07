@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import * as parse from 'parse-torrent-name';
 import { Injectable } from '@nestjs/common';
 import * as path from 'path';
-import Configuration from 'shared/configuration';
+import Configuration from '../shared/configuration';
 @Injectable()
 export default class FileService {
     dir: string;
