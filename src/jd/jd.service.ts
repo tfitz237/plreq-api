@@ -1,6 +1,6 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
-import Configuration from '../-';
+import Configuration from '../shared/configuration';
 import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
 import FileService from '../shared/file';
 @Injectable()
