@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import * as parse from 'parse-torrent-name';
 import { Injectable } from '@nestjs/common';
 import * as path from 'path';
-import Configuration from './configuration';
+import Configuration from 'shared/configuration';
 @Injectable()
 export default class FileService {
     dir: string;
@@ -23,27 +23,25 @@ export default class FileService {
         for(var i in files) {
             var file = files[i];
             var name = this.parseName(path.basename(file));
+            console.log(name, file);
             if (name.isVideo) {
+                let dir;
+                let dest;
                 if (name.isTv) {
-                    const dir = path.join(this.tvDestination, name.title);
+                    dir = path.join(this.tvDestination, name.title);
                     await fs.ensureDir(dir);                    
-                    
-                    try {
-                        await fs.move(file, path.join(dir, path.basename(file)));
-                        console.log('moved ' + file + ' to TV Shows');
-                    } catch(err) {
-                        console.error(err);
-                        return false;
-                    }
+                    dest = path.join(dir, path.basename(file));
+
                 } else {
-                    const dir = this.movieDestination;
-                    try {
-                        await fs.move(file, path.join(dir, path.basename(file)));
-                        console.log('moved ' + file + ' to Movies');
-                    } catch(err) {
-                        console.error(err);
-                        return false;
-                    }
+                    dir = this.movieDestination;
+                    dest = path.join(dir, path.basename(file));
+                }
+                try {
+                    await fs.move(file, dest);
+                    console.log(`moved ${file} to ${dest}`);
+                } catch(err) {
+                    console.error(err);
+                    return false;
                 }
             }
         }

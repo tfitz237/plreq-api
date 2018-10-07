@@ -2,7 +2,7 @@ import { Injectable, HttpException } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
 import Configuration from '../shared/configuration';
 import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
-import FileService from '../shared/file';
+import FileService from './file.service';
 @Injectable()
 export class JdService {
     isConnected: boolean = false;
