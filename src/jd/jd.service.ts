@@ -97,7 +97,8 @@ export class JdService {
 
     async movePackages(): Promise<void> {
         if (this.packagesFinished(true)) {
-            if (await this.fileService.moveVideos()) {
+            const [success, moved] =  await this.fileService.moveVideos();
+            if (moved) {
                 const cleaned = await this.cleanUp();
             }
         }

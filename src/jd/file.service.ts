@@ -18,8 +18,9 @@ export default class FileService {
     }
     
 
-    async moveVideos(): Promise<boolean> {  
+    async moveVideos(): Promise<[boolean, boolean]> {  
         var files = this.getFiles(this.dir);
+        let moved = false;
         for(var i in files) {
             var file = files[i];
             var name = this.parseName(path.basename(file));
@@ -38,15 +39,16 @@ export default class FileService {
                 }
                 try {
                     await fs.move(file, dest);
+                    moved = true;
                     console.log(`moved ${file} to ${dest}`);
                 } catch(err) {
                     console.error(err);
-                    return false;
+                    return [false, moved];
                 }
             }
         }
 
-        return true;
+        return [true,moved];
     }
 
 
