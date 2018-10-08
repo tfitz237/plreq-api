@@ -14,26 +14,26 @@ export enum UserLevel {
 
 @Injectable()
 export class AuthService {
-    configurationUsers: any;
+    users: iUser[];
     constructor(private readonly jwtService: JwtService) {
-        this.configurationUsers = new Configuration().getConfig().users;
+        this.users = new Configuration().users.map(user => {
+            user.password = pwHash.generate(user.password);
+            return user;
+        });
     }
 
     validateUser(payload: iUser): Promise<boolean> {
-        const user = Users.find(u => u.userGuid == payload.userGuid && u.level > UserLevel.Guest); 
+        const user = this.users.find(u => u.userGuid == payload.userGuid && u.level > UserLevel.Guest); 
         return Promise.resolve(!!user);
     }
 
     requestToken(inputUser: iUser): Promise<string> {
         // TODO: Database integration for un/pw
-        const user = Users.find(u => u.username == inputUser.username && pwHash.verify(inputUser.password, u.password)); 
+        const user = this.users.find(u => u.username == inputUser.username && pwHash.verify(inputUser.password, u.password)); 
         return Promise.resolve(!!user ? this.jwtService.sign({ userGuid: user.userGuid }) : null);
     }
 }
 
-const Users : iUser[] = this.configurationUsers.map(user => {
-    user.password = pwHash.generate(user.password);
-});
 
 
 function guid() {

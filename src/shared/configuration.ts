@@ -34,6 +34,7 @@ export default class Configuration {
         this._jd = creds.jd;
         this._jwt = creds.jwt;
         this._filePaths = creds.filePaths;
+        this._users = creds.users;
         return creds;
     }
 
