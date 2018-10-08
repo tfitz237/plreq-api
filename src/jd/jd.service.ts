@@ -108,7 +108,7 @@ export class JdService {
         const finished = this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK"));
         if (finished.length > 0) {
             if (stopOnExtracted) {                
-                const extracting = this.packages.filter(pack => pack.status && pack.status.includes('Extracting'));
+                const extracting = this.packages.filter(pack => pack.status && (pack.status.includes('Extracting') || pack.status.includes('Finished')));
                 return extracting.length == 0;
             }
             return true;
@@ -116,7 +116,7 @@ export class JdService {
     }
 
 
-    private async cleanUp(): Promise<boolean> {     
+    async cleanUp(): Promise<boolean> {     
         try {
             const result = await jdApi.cleanUp(this.deviceId);
             if (result) {

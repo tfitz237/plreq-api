@@ -32,4 +32,10 @@ export class JdController {
     async addLinks(@Body() links: string[]) {
         return await this.jdService.addLinks(links, true);
     }
+
+    @Get('clean-up')
+    async cleanUp() {
+        return await this.jdService.cleanUp();
+    }
+
 }
