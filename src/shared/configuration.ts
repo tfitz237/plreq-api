@@ -9,17 +9,21 @@ export default class Configuration {
     _jwt: any;
     creds: any;
     _filePaths: any;
+    _users: any;
     get jd() { 
-        return this._jd || this.getCreds().jd;
+        return this._jd || this.getConfig().jd;
     }
     get jwt() {
-        return this._jwt || this.getCreds().jwt;
+        return this._jwt || this.getConfig().jwt;
     }
     get filePaths() {
-        return this._filePaths || this.getCreds().filePaths;
+        return this._filePaths || this.getConfig().filePaths;
+    }
+    get users() {
+        return this._users || this.getConfig().users;
     }
 
-    getCreds(): any {
+    getConfig(): any {
         let file;
         try {
             file = fs.readFileSync('config.json', 'utf8');

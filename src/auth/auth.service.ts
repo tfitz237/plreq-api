@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as pwHash from 'password-hash';
 import { JwtService } from '@nestjs/jwt';
 import { iUser } from '../models/user';
+import Configuration from '../shared/configuration';
 
 
 export enum UserLevel {
@@ -13,7 +14,10 @@ export enum UserLevel {
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly jwtService: JwtService) {}
+    configurationUsers: any;
+    constructor(private readonly jwtService: JwtService) {
+        this.configurationUsers = new Configuration().getConfig().users;
+    }
 
     validateUser(payload: iUser): Promise<boolean> {
         const user = Users.find(u => u.userGuid == payload.userGuid && u.level > UserLevel.Guest); 
@@ -27,14 +31,9 @@ export class AuthService {
     }
 }
 
-const Users : iUser[] = [
-    {
-        username: 'admin',
-        password: pwHash.generate('password'),
-        userGuid: guid(),
-        level: UserLevel.SuperAdmin
-    }
-]
+const Users : iUser[] = this.configurationUsers.map(user => {
+    user.password = pwHash.generate(user.password);
+});
 
 
 function guid() {
