@@ -118,7 +118,9 @@ export class JdService {
 
     async cleanUp(): Promise<boolean> {     
         try {
-            const result = await jdApi.cleanUp(this.deviceId);
+            const finished = this.packages.filter(pack => pack.finished && pack.status && (pack.status.includes("Extraction OK") || pack.status.includes('Finished'))).map(p => p.uuid);
+
+            const result = await jdApi.cleanUp(this.deviceId, finished);
             if (result) {
                 return true;
             }
