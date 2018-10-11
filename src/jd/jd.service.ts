@@ -8,13 +8,11 @@ export class JdService {
     isConnected: boolean = false;
     deviceId: string;
     links: jdLink[] = [];
-    creds: Configuration;
     packageUuids: string[];
     packages: jdPackage[] = [];
      
     pollPackages: boolean;
-    constructor(private readonly fileService: FileService) {
-        this.creds = new Configuration();
+    constructor(private readonly fileService: FileService, private readonly config: Configuration) {
         this.pollPackages = true; 
     }
 
@@ -23,17 +21,14 @@ export class JdService {
     async connect(): Promise<jdConnectResponse> {
 
         try {
-            const response = await jdApi.connect(this.creds.jd.email, this.creds.jd.password);
+            const response = await jdApi.connect(this.config.jd.email, this.config.jd.password);
             if (response === true) {   
                 this.isConnected = true;                         
                 return {
                     connected: true
                 };
             } else {
-                throw new HttpException({
-                    connected: false,
-                    error: response.error
-                }, 400);;
+                throw response;
             }
         }
         catch (response) {
@@ -116,17 +111,21 @@ export class JdService {
     }
 
 
-    async cleanUp(): Promise<boolean> {     
+    async cleanUp(): Promise<jdInit> {     
         try {
             const finished = this.packages.filter(pack => pack.finished && pack.status && (pack.status.includes("Extraction OK") || pack.status.includes('Finished'))).map(p => p.uuid);
 
             const result = await jdApi.cleanUp(this.deviceId, finished);
             if (result) {
-                return true;
+                return {
+                    success: true
+                };
             }
         } catch (e) {
             console.error(e);
-            return false;
+            return {
+                success: false
+            };
         }
     }
 
@@ -161,7 +160,7 @@ export class JdService {
         return [];
     }
 
-    async getPackages(cachedLinks: boolean = false, uuids: string = null, cachedPackages: boolean = true): Promise<jdPackage[]|jdInit> {
+    async getPackages(cachedLinks: boolean = false, uuids: string = null, cachedPackages: boolean = true): Promise<jdPackage[]|jdPackage|jdInit> {
         if (cachedPackages && this.packages.length > 0) {
             return this.packages;
         }
@@ -186,6 +185,9 @@ export class JdService {
 
                     this.packageUuids = packages;
                     this.packages = pck.data;
+                    if (pck.data.length == 1) {
+                        return pck.data[0];
+                    }
                     return pck.data;
                 } catch {}
             }

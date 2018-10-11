@@ -9,11 +9,10 @@ export default class FileService {
     tvDestination: string;
     movieDestination: string;
 
-    constructor() {
-        const config = new Configuration().filePaths;
-        this.dir = config.dir;
-        this.tvDestination = config.tvDestination;
-        this.movieDestination = config.movieDestination;
+    constructor(private readonly config: Configuration) {
+        this.dir = this.config.filePaths.dir;
+        this.tvDestination = this.config.filePaths.tvDestination;
+        this.movieDestination = this.config.filePaths.movieDestination;
 
     }
     

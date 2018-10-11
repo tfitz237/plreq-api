@@ -7,10 +7,10 @@ import { iUser } from '../models/user';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly authService: AuthService) {
+  constructor(private readonly authService: AuthService, private readonly configuration: Configuration) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: new Configuration().jwt.secret,
+      secretOrKey: configuration.jwt.secret,
     });
   }
 

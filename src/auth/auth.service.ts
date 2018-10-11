@@ -15,8 +15,8 @@ export enum UserLevel {
 @Injectable()
 export class AuthService {
     users: iUser[];
-    constructor(private readonly jwtService: JwtService) {
-        this.users = new Configuration().users.map(user => {
+    constructor(private readonly jwtService: JwtService, private readonly config: Configuration) {
+        this.users = this.config.users.map(user => {
             user.password = pwHash.generate(user.password);
             return user;
         });

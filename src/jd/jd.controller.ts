@@ -8,33 +8,23 @@ import { AuthGuard } from '@nestjs/passport';
 export class JdController {
     constructor(private readonly jdService: JdService) {}
 
-    @Get('connect')
-    async connect(): Promise<jdConnectResponse> {
-        return await this.jdService.connect();        
-    }
-
-    @Get('init')
-    async init(): Promise<jdInit> {
-        return await this.jdService.initiate();
-    }
-
     @Get('packages/:uuid')
-    async  packages(@Param('uuid') uuid): Promise<jdPackage[]|jdInit> {
-        return await this.jdService.getPackages(true, uuid);
+    async  package(@Param('uuid') uuid): Promise<jdPackage|jdInit> {
+        return await this.jdService.getPackages(true, uuid) as jdPackage|jdInit;
     }
     
     @Get('packages')
-    async package(): Promise<jdPackage[]|jdInit> {
-        return await this.jdService.getPackages(true);
+    async packages(): Promise<jdPackage[]|jdInit> {
+        return await this.jdService.getPackages(true) as jdPackage[]|jdInit;
     }
 
     @Post('add-links')
-    async addLinks(@Body() links: string[]) {
+    async addLinks(@Body() links: string[]): Promise<jdInit> {
         return await this.jdService.addLinks(links, true);
     }
 
     @Get('clean-up')
-    async cleanUp() {
+    async cleanUp(): Promise<jdInit> {
         return await this.jdService.cleanUp();
     }
 

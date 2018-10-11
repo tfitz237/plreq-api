@@ -4,6 +4,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
+import { SharedModule } from '../shared/shared.module';
 import Configuration from '../shared/configuration';
 @Module({
     imports: [
@@ -13,7 +14,8 @@ import Configuration from '../shared/configuration';
             signOptions: {
                 expiresIn: 3600,
             },
-        })
+        }),
+        SharedModule
     ],
     providers: [AuthService, JwtStrategy],
     controllers: [AuthController],

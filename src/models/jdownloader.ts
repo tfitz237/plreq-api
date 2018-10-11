@@ -21,7 +21,7 @@ export interface jdPackage {
     name: string;
     finished: boolean;
     uuid: number;
-    enabled: true;
+    enabled: boolean;
     status: string;
     progressPercent: number;
     speedInMb: number;
