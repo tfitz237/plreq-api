@@ -64,8 +64,8 @@ export class ItiService {
         const links = [];
         const linksDiv = html.match(/<div.*id=\"links_mega\">(.*)<\/div>.*<div.*Password/);
         if (linksDiv) {
-            const reg =  /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/mega.co.nz\/#[!#\-_A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/mega.co.nz\/#[!#\-_A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/;
-            const gReg = /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/mega.co.nz\/#[!#\-_A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/mega.co.nz\/#[!#\-_A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/g;
+            const reg =  /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/[A-Za-z-.]+\/#[!#\-_A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/[A-Za-z-.]+\/#[!#\-_A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/;
+            const gReg = /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/[A-Za-z-.]+\/#[!#\-_A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/[A-Za-z-.]+\/#[!#\-_A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/g;
             const linksInDiv = linksDiv[1].match(gReg);
             if (linksInDiv) {
                 linksInDiv.forEach(link => {
