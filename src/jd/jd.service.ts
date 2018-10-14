@@ -34,7 +34,7 @@ export class JdService {
         catch (response) {
             throw new HttpException({
                 connected: false,
-                error: JSON.parse(response.error)
+                error: (response.error && response.error.src) ? response.error : JSON.parse(response.error)
             }, 400);
         }
     }
@@ -90,12 +90,20 @@ export class JdService {
         }, 60000);
     }
 
-    async movePackages(): Promise<void> {
+    async movePackages(): Promise<jdInit> {
         if (this.packagesFinished(true)) {
             const [success, moved] =  await this.fileService.moveVideos();
             if (moved) {
                 const cleaned = await this.cleanUp();
             }
+            return {
+                success: success
+            }
+            
+        }
+
+        return {
+            success: false
         }
     }
    
