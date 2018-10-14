@@ -1,23 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import * as FormData from 'form-data';
+import Configuration from '../shared/configuration';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
 export class ItiService {
     isLoggedIn: boolean;
     cookie: any;
-    constructor() {
-
+    constructor(private readonly config: Configuration) {
     }
-    host = 'https://intotheinter.net';
-    user = '***REMOVED***';
-    pass = '***REMOVED***';
-    sessionId = '';
     async search(query: string): Promise<any> {
-        if (this.isLoggedIn || await this.login()) {
+        if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(`${this.host}/ajax.php`, {
+                const result = await axios.get(`${this.config.iti.host}/ajax.php`, {
                     params: {
                         i: 'main',
                         which: encodeURIComponent(query),
@@ -44,6 +39,27 @@ export class ItiService {
     }
 
 
+    async getLinks(linkId: number): Promise<any> {
+        if (await this.ensureLoggedIn()) {
+            try {
+                const result = await axios.get(this.config.iti.host, {
+                    params: {
+                        'i': `SIG:${linkId}`
+                    },
+                    headers: {
+                        'Cookie': this.cookie
+                    }
+                });
+                return this.findLinksInPage(result.data);
+            }
+            catch (e) {
+                console.log(e);
+                return e;
+            }
+        }
+    }
+
+
     findLinksInPage(html: string) {       
         const links = [];
         const linksDiv = html.match(/<div.*id=\"links_mega\">(.*)<\/div>.*<div.*Password/);
@@ -63,57 +79,47 @@ export class ItiService {
         return links;
     }
 
-    async getLinks(linkId: number): Promise<any> {
-        if (this.isLoggedIn || await this.login()) {
-            try {
-                const result = await axios.get(this.host, {
-                    params: {
-                        'i': `SIG:${linkId}`
-                    },
-                    headers: {
-                        'Cookie': this.cookie
-                    }
-                });
-                return this.findLinksInPage(result.data);
-            }
-            catch (e) {
-                console.log(e);
-                return e;
-            }
+    private async ensureLoggedIn(): Promise<boolean> {
+        const status = await this.loginStatus();
+        if(status) {
+            return true;
+        } else {
+            return await this.login();
         }
+
     }
 
-    async login(retry: boolean = false): Promise<boolean> {
+    private async loginStatus(): Promise<boolean> {
         try {
-            const formData = new FormData();
-            formData.append('user', this.user);
-            formData.append('pass', this.pass);
-            const headers ={
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.54 Safari/537.36',
-                'Connection': 'keep-alive'
-            };
+            const headers = {};
             if (this.cookie) {
                 headers['Cookie'] = this.cookie;
             }
-            let result = await axios.post(this.host, `user=${this.user}&pass=${this.pass}`, {
+            const result = await axios.get(`${this.config.iti.host}`, { headers: headers });
+            if (result.headers['set-cookie']) {
+                this.cookie = result.headers['set-cookie'][0];
+            }
+            return result.data.includes('<a id="icon_logout" href="?i=logout">');
+        }
+        catch (e) {
+            console.log(e);
+            return false;
+        }
+    }
+
+    private async login(retry: boolean = false): Promise<boolean> {
+        try {
+            let result = await axios.post(this.config.iti.host, `user=${this.config.iti.user}&pass=${this.config.iti.pass}`, {
                 params: {
                     'i': 'redirect'
                 },
-                headers: headers,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Cookie': this.cookie
+                },
                 withCredentials: true
-            });
-            if (!this.cookie) {
-                this.cookie = result.headers['set-cookie'] ? result.headers['set-cookie'][0]: '';
-                if (!retry) {
-                    return this.login(true);
-                }
-            }
-            if (result.data.includes('<a id="icon_logout" href="?i=logout">')) {
-                this.isLoggedIn = true;
-                return true;
-            }
-            return false;
+            });            
+            return result.data.includes('<a id="icon_logout" href="?i=logout">');
         }
         catch (e) {
             console.log(e);

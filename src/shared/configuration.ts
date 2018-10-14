@@ -12,6 +12,7 @@ export default class Configuration {
     creds: any;
     _filePaths: any;
     _users: any;
+    _iti: any;
     get jd(): iConfiguration["jd"] { 
         return this._jd || this.getConfig().jd;
     }
@@ -24,6 +25,9 @@ export default class Configuration {
     get users(): iUser[] {
         return this._users || this.getConfig().users;
     }
+    get iti(): iConfiguration["iti"] {
+        return this._iti || this.getConfig().iti;
+    }
 
     getConfig(): iConfiguration {
         let file;
@@ -32,12 +36,13 @@ export default class Configuration {
         } catch (e) {
             this.error = { src: 'fs', type: e}
         }
-        const creds = JSON.parse(file);
-        this._jd = creds.jd;
-        this._jwt = creds.jwt;
-        this._filePaths = creds.filePaths;
-        this._users = creds.users;
-        return creds;
+        const config = JSON.parse(file);
+        this._jd = config.jd;
+        this._jwt = config.jwt;
+        this._filePaths = config.filePaths;
+        this._users = config.users;
+        this._iti = config.iti;
+        return config;
     }
 
 }

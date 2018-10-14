@@ -13,5 +13,10 @@ export interface iConfiguration {
         tvDestination: string,
         movieDestination: string
     },
-    users: iUser[]
+    users: iUser[],
+    iti: {
+        host: string,
+        user: string,
+        pass: string
+    }
 }
