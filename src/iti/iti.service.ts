@@ -48,8 +48,8 @@ export class ItiService {
         const links = [];
         const linksDiv = html.match(/<div.*id=\"links_mega\">(.*)<\/div>.*<div.*Password/);
         if (linksDiv) {
-            const reg = /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/mega.co.nz\/#[!#\-A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/mega.co.nz\/#[!#\-A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/;
-            const gReg = /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/mega.co.nz\/#[!#\-A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/mega.co.nz\/#[!#\-A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/g;
+            const reg =  /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/mega.co.nz\/#[!#\-_A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/mega.co.nz\/#[!#\-_A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/;
+            const gReg = /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/mega.co.nz\/#[!#\-_A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/mega.co.nz\/#[!#\-_A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/g;
             const linksInDiv = linksDiv[1].match(gReg);
             if (linksInDiv) {
                 linksInDiv.forEach(link => {
@@ -109,8 +109,6 @@ export class ItiService {
                     return this.login(true);
                 }
             }
-            
-            console.log(result.data);
             if (result.data.includes('<a id="icon_logout" href="?i=logout">')) {
                 this.isLoggedIn = true;
                 return true;
