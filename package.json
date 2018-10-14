@@ -25,6 +25,7 @@
     "@nestjs/core": "^5.1.0",
     "@nestjs/jwt": "^0.2.0",
     "@nestjs/passport": "^5.1.0",
+    "axios": "^0.18.0",
     "fs-extra": "^7.0.0",
     "helmet": "^3.13.0",
     "imdb-api": "^4.0.2",
