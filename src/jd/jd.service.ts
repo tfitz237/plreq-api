@@ -108,7 +108,7 @@ export class JdService {
     }
    
     private packagesFinished(stopOnExtracted: boolean): boolean {
-        const finished = this.packages.filter(pack => pack.finished && pack.status && (pack.status.includes("Extraction OK") || pack.status.includes('Finished')));
+        const finished = this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK"));
         if (finished.length > 0) {
             if (stopOnExtracted) {                
                 const extracting = this.packages.filter(pack => pack.status && pack.status.includes('Extracting'));
@@ -121,7 +121,7 @@ export class JdService {
 
     async cleanUp(): Promise<jdInit> {     
         try {
-            const finished = this.packages.filter(pack => pack.finished && pack.status && (pack.status.includes("Extraction OK") || pack.status.includes('Finished'))).map(p => p.uuid);
+            const finished = this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK")).map(p => p.uuid);
 
             const result = await jdApi.cleanUp(this.deviceId, finished);
             if (result) {
