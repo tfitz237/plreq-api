@@ -10,7 +10,7 @@ export class ItiController {
 
     @Post('search')
     async search(@Body() request: any): Promise<any> {
-        return await this.itiService.search(request.query);
+        return await this.itiService.search(request);
     }
 
     @Get('getLinks/:id')

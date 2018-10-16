@@ -9,24 +9,30 @@ export class ItiService {
     cookie: any;
     constructor(private readonly config: Configuration) {
     }
-    async search(query: string): Promise<any> {
+    async search(query: any, results = [], retry: number = 0): Promise<any> {
         if (await this.ensureLoggedIn()) {
             try {
                 const result = await axios.get(`${this.config.iti.host}/ajax.php`, {
                     params: {
                         i: 'main',
-                        which: encodeURIComponent(query),
-                        s: 1,
-                        p: ''
+                        which: encodeURIComponent(query.query),
+                        s: (retry * 100) + 1,
+                        p: query.parent,
+                        c: query.child
                     },
                     headers:{
                         'Cookie': this.cookie
                     }
                 });
                 if (result.data && result.data.length > 0) {
-                    return result.data.filter(link => link.parent == "Movies" || link.parent == "TV");
+                    const filtered = result.data.filter(link => query.query.split(' ').every(q => link.title.includes(q)));
+                    results = results.concat(filtered);
+                    if (filtered.length < result.data.length && results.length < 100) {
+                        return this.search(query, results, ++retry);
+                    }
                 }
-                return result.data;
+                
+                return results;
             }
             catch (e) {
                 console.log(e);
