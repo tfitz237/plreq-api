@@ -25,7 +25,7 @@ export class ItiService {
                     }
                 });
                 if (result.data && result.data.length > 0) {
-                    const filtered = result.data.filter(link => query.query.split(' ').every(q => link.title.includes(q)));
+                    const filtered = result.data.filter(link => query.query.split(' ').every(q => link.title.toLowerCase().includes(q.toLowerCase())));
                     results = results.concat(filtered);
                     if (filtered.length < result.data.length && results.length < 100) {
                         return this.search(query, results, ++retry);
