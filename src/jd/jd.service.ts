@@ -222,8 +222,20 @@ export class JdService {
         pack.progress = {
             percent: pack.progressPercent + '%',
             eta: Math.floor(minutes) + 'm' + Math.floor(seconds) + 's',
-            speedInMb: pack.speedInMb + 'mb/s'
+            speedInMb: isNaN(pack.speedInMb) ? '0' : pack.speedInMb + 'mb/s'
+        };
+
+        if (pack.status && pack.status.includes('Extracting')) {
+            
+            const match = pack.status.match(/Extracting \(ETA: ((\d+)m:(\d+)s)\).*/);
+            if (match) {
+                pack.progress.eta = match[1];
+                const seconds = parseInt(match[2]) * 60 + parseInt(match[3]);            
+                pack.extractionProgress = seconds;
+                pack.extracting = true;
+            }
         }
+
         return pack;
         
     }

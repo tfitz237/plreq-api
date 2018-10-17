@@ -27,9 +27,12 @@ export interface jdPackage {
     speedInMb: number;
     speed: number;
     bytesTotal: number;
+    extracting?: boolean;
+    extractionProgress?: number;   
     progress: {
         percent: string;
         eta: string;
+        extraction?: string;
         speedInMb: string;
     }
 }
