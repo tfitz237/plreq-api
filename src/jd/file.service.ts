@@ -24,8 +24,8 @@ export default class FileService {
         for(var i in files) {
             var file = files[i];
             var name = this.parseName(path.basename(file));
-            console.log(name, file);
             if (name.isVideo) {
+                console.log(name);
                 let dir;
                 let dest;
                 if (name.isTv) {
@@ -40,7 +40,7 @@ export default class FileService {
                 try {
                     await fs.move(file, dest);
                     moved = true;
-                    console.log(`moved ${file} to ${dest}`);
+                    console.log(`moved ${path.basename(file)} to ${dest}`);
                 } catch(err) {
                     console.error(err);
                     return [false, moved];
