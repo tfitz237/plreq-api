@@ -121,9 +121,14 @@ export class JdService {
 
     async cleanUp(): Promise<jdInit> {     
         try {
+
             const finished = this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK")).map(p => p.uuid);
 
-            const result = await jdApi.cleanUp(this.deviceId, finished);
+            let result = await jdApi.cleanUp(this.deviceId, finished);
+            const packages = await this.getPackages(false, null, false);
+            if (this.packages.length == 0) {
+                result = result && this.fileService.cleanUp();
+            }
             if (result) {
                 return {
                     success: true

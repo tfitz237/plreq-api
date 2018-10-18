@@ -3,6 +3,7 @@ import * as parse from 'parse-torrent-name';
 import { Injectable } from '@nestjs/common';
 import * as path from 'path';
 import Configuration from '../shared/configuration';
+import * as rimraf from 'rimraf';
 @Injectable()
 export default class FileService {
     dir: string;
@@ -50,6 +51,12 @@ export default class FileService {
         return [true,moved];
     }
 
+    async cleanUp(): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            rimraf(this.dir + '/*', () => resolve(true));
+        });
+        
+    }
 
     parseName(fileName: string) {
         const parsed = parse(fileName);
