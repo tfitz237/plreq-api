@@ -239,13 +239,14 @@ export class JdService {
         
     }
 
-    async addLinks(links: string[], autoStart: boolean = true): Promise<jdInit> {
+    async addLinks(links: string[], packageName: string): Promise<jdInit> {
         const response = await this.initiate();
         if (response.success) {
-            const linksString = links.join(' ');
+            
             let resp;
             try {
-                resp = await jdApi.addLinks(linksString, this.deviceId, autoStart);
+                const linksString = links.join(' ');
+                resp = await jdApi.addLinks(linksString, this.deviceId, packageName);
                 return { success: true};
             } catch (e) {
                 throw new HttpException({

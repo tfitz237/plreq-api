@@ -19,8 +19,8 @@ export class JdController {
     }
 
     @Post('add-links')
-    async addLinks(@Body() links: string[]): Promise<jdInit> {
-        return await this.jdService.addLinks(links, true);
+    async addLinks(@Body() request: any): Promise<jdInit> {
+        return await this.jdService.addLinks(request.links, request.name);
     }
 
     @Get('clean-up')
