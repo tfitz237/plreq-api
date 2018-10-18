@@ -125,8 +125,8 @@ export class JdService {
             const finished = this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK")).map(p => p.uuid);
 
             let result = await jdApi.cleanUp(this.deviceId, finished);
-            const packages = await this.getPackages(false, null, false);
-            if (this.packages.length == 0) {
+            const packages = await this.getPackages(false, null, false) as jdPackage[];
+            if (packages.length == 0) {
                 result = result && this.fileService.cleanUp();
             }
             if (result) {
