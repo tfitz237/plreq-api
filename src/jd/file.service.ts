@@ -86,8 +86,7 @@ export default class FileService {
             this.parseName(f.fileName).isVideo
         );
         packages.forEach(p => {
-            p.files = p.files || [];
-            p.files.push(files.find(x => x.directoryName.includes(p.name)));
+            p.files = files.filter(x => x.directoryName.includes(p.name));
         });
 
         return packages;
