@@ -133,7 +133,7 @@ export class JdService {
 
     async cleanUp(finished: jdPackage[] = this.finishedPackages): Promise<jdInit> {     
         try {
-            let result = await jdApi.cleanUp(this.deviceId, finished);
+            let result = await jdApi.cleanUp(this.deviceId, finished.map(x => x.name));
             const packages = await this.getPackages(false, null, false) as jdPackage[];
             if (packages.length == 0) {
                 result = result && this.fileService.cleanUp();
