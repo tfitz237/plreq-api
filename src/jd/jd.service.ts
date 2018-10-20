@@ -100,8 +100,8 @@ export class JdService {
     async movePackages(): Promise<jdInit> {
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
-            if (packages.filter(x => x.file.moved).length > 0) {
-                const cleaned = await this.cleanUp(packages.filter(x => x.file.moved));
+            if (packages.filter(x => x.files.every(y => y && y.moved)).length > 0) {
+                const cleaned = await this.cleanUp(packages.filter(x => x.files.every(y => y && y.moved)));
                 return cleaned;
             }
             return {
@@ -213,6 +213,12 @@ export class JdService {
                         }
                         
                     });
+                    this.packages.forEach((pac, idx) => {
+                        const a = pck.data.findIndex(x => x.uuid == pac.uuid);
+                        if (a == -1) {
+                            this.packages.splice(idx, 1);
+                        }
+                    })
                     if (pck.data.length == 1) {
                         return pck.data[0];
                     }

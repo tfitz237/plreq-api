@@ -31,29 +31,35 @@ export default class FileService {
     async moveVideos(packages: jdPackage[] = []): Promise<[boolean, jdPackage[]]> {  
         packages = this.findVideos(packages);
         let moved = false;
-        for(var i in packages) {
-            var file = packages[i].file;
-            var name = this.parseName(file.fileName);
-            let dir;
-            let dest;
-            if (name.isTv) {
-                dir = path.join(this.tvDestination, name.title);
-                await fs.ensureDir(dir);                    
-                dest = path.join(dir, file.fileName);
-            } else {
-                dir = this.movieDestination;
-                dest = path.join(dir, file.fileName);
-            }
-            try {
-                await fs.move(file.fullPath, dest);
-                packages[i].file.destination = dest;
-                packages[i].file.moved = true;
-                console.log(`moved ${file.fileName} to ${dest}`);
-            } catch(err) {
-                console.error(err);
-                return [false, packages];
-            }
-            
+        for(var j in packages) {
+            for (var i in packages[j].files) {
+                var file = packages[j].files[i];
+                if (file) {
+                    var name = this.parseName(file.fileName);
+                    let dir;
+                    let dest;
+                    if (name.isTv) {
+                        dir = path.join(this.tvDestination, name.title);
+                        await fs.ensureDir(dir);                    
+                        dest = path.join(dir, file.fileName);
+                    } else {
+                        dir = this.movieDestination;
+                        dest = path.join(dir, file.fileName);
+                    }
+                    try {
+
+                        packages[j].files[i].destination = dest;
+                        packages[j].files[i].moved = true;
+                        if (!file.moved) {
+                            await fs.move(file.fullPath, dest);
+                            console.log(`moved ${file.fileName} to ${dest}`);
+                        }
+                    } catch(err) {
+                        console.error(err);
+                        return [false, packages];
+                    }
+                }
+            }     
         }
 
         return [true, packages];
@@ -79,7 +85,8 @@ export default class FileService {
             this.parseName(f.fileName).isVideo
         );
         packages.forEach(p => {
-            p.file = files.find(x => x.directoryName.includes(p.name));
+            p.files = p.files || [];
+            p.files.push(files.find(x => x.directoryName.includes(p.name)));
         });
 
         return packages;

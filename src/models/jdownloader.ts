@@ -35,5 +35,5 @@ export interface jdPackage {
         extraction?: string;
         speedInMb: string;
     },
-    file: File
+    files: File[]
 }
