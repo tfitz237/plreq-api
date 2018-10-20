@@ -45,7 +45,7 @@ export default class FileService {
                 dest = path.join(dir, file.fileName);
             }
             try {
-                await fs.move(file, dest);
+                await fs.move(file.fullPath, dest);
                 packages[i].file.destination = dest;
                 packages[i].file.moved = true;
                 console.log(`moved ${file.fileName} to ${dest}`);
