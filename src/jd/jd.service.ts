@@ -131,7 +131,7 @@ export class JdService {
     }
 
 
-    async cleanUp(finished: jdPackage[]): Promise<jdInit> {     
+    async cleanUp(finished: jdPackage[] = this.finishedPackages): Promise<jdInit> {     
         try {
             let result = await jdApi.cleanUp(this.deviceId, finished);
             const packages = await this.getPackages(false, null, false) as jdPackage[];
