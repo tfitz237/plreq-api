@@ -102,7 +102,7 @@ export default class FileService {
                 files_.push({
                     fileName: path.basename(name),
                     fullPath: name,
-                    directoryName: dirs[dirs.length - 1],
+                    directoryName: dirs[dirs.length - 1].replace(/[\-_\[\]\(\)]+/, ''),
                     moved: false
                 });
             }
