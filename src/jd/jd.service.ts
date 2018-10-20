@@ -3,23 +3,28 @@ import * as jdApi from 'jdownloader-api';
 import Configuration from '../shared/configuration';
 import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
 import FileService from './file.service';
+import { WsGateway } from '../ws/ws.gateway';
 @Injectable()
 export class JdService {
     isConnected: boolean = false;
     deviceId: string;
     links: jdLink[] = [];
-    packageUuids: string[];
     packages: jdPackage[] = [];
-     
-    pollPackages: boolean;
-    constructor(private readonly fileService: FileService, private readonly config: Configuration) {
-        this.pollPackages = true; 
+    pollPackages: boolean = true;
+    private socket: WsGateway;
+    constructor(private readonly fileService: FileService, 
+        private readonly config: Configuration) {
+        
+    }
+
+    setSocket(socket: WsGateway) {
+        this.socket = socket;
+        this.initiate();
     }
 
     get isInitiated() : boolean { return this.isConnected && !!this.deviceId };
 
     async connect(): Promise<jdConnectResponse> {
-
         try {
             const response = await jdApi.connect(this.config.jd.email, this.config.jd.password);
             if (response === true) {   
@@ -84,6 +89,8 @@ export class JdService {
         this.pollPackages = false;
         setInterval(async () => {
             await this.getPackages(false, null, false);
+            if (this.socket && this.socket.server)
+                this.socket.server.to(this.socket.authorizedGuid).emit('packages', this.packages);
         }, 2000);
         setInterval(async () => {
             await this.movePackages();
@@ -91,10 +98,11 @@ export class JdService {
     }
 
     async movePackages(): Promise<jdInit> {
-        if (this.packagesFinished(true)) {
-            const [success, moved] =  await this.fileService.moveVideos();
-            if (moved) {
-                const cleaned = await this.cleanUp();
+        if (this.anyPackagesFinished(true)) {
+            const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
+            if (packages.filter(x => x.file.moved).length > 0) {
+                const cleaned = await this.cleanUp(packages.filter(x => x.file.moved));
+                return cleaned;
             }
             return {
                 success: success
@@ -106,10 +114,14 @@ export class JdService {
             success: false
         }
     }
+
+    private get finishedPackages() {
+        return this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK"));
+
+    }
    
-    private packagesFinished(stopOnExtracted: boolean): boolean {
-        const finished = this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK"));
-        if (finished.length > 0) {
+    private anyPackagesFinished(stopOnExtracted: boolean): boolean {
+        if (this.finishedPackages.length > 0) {
             if (stopOnExtracted) {                
                 const extracting = this.packages.filter(pack => pack.status && pack.status.includes('Extracting'));
                 return extracting.length == 0;
@@ -119,11 +131,8 @@ export class JdService {
     }
 
 
-    async cleanUp(): Promise<jdInit> {     
+    async cleanUp(finished: jdPackage[]): Promise<jdInit> {     
         try {
-
-            const finished = this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK")).map(p => p.uuid);
-
             let result = await jdApi.cleanUp(this.deviceId, finished);
             const packages = await this.getPackages(false, null, false) as jdPackage[];
             if (packages.length == 0) {
@@ -194,10 +203,16 @@ export class JdService {
             if (packages) {
                 try {
                     const pck = await jdApi.queryPackages(this.deviceId, packages);
-                    pck.data = pck.data.map(this.addPackageDetails);
-
-                    this.packageUuids = packages;
-                    this.packages = pck.data;
+                    pck.data.forEach(p => {
+                        p = this.addPackageDetails(p);
+                        const pa = this.packages.find(x => x.uuid == p.uuid);
+                        if (pa) {
+                            Object.assign(pa, p);
+                        } else {
+                            this.packages.push(p);
+                        }
+                        
+                    });
                     if (pck.data.length == 1) {
                         return pck.data[0];
                     }

@@ -4,51 +4,59 @@ import { Injectable } from '@nestjs/common';
 import * as path from 'path';
 import Configuration from '../shared/configuration';
 import * as rimraf from 'rimraf';
+import { WsGateway } from '../ws/ws.gateway';
+import { jdPackage } from '../models/jdownloader';
 @Injectable()
 export default class FileService {
     dir: string;
     tvDestination: string;
     movieDestination: string;
+    socket: WsGateway;
 
     constructor(private readonly config: Configuration) {
+        this.setConfiguration();
+    }
+    
+    setConfiguration() {
         this.dir = this.config.filePaths.dir;
         this.tvDestination = this.config.filePaths.tvDestination;
         this.movieDestination = this.config.filePaths.movieDestination;
+    }
 
+    setSocket(socket: WsGateway) {
+        this.socket = socket;
     }
     
 
-    async moveVideos(): Promise<[boolean, boolean]> {  
-        var files = this.getFiles(this.dir);
+    async moveVideos(packages: jdPackage[] = []): Promise<[boolean, jdPackage[]]> {  
+        packages = this.findVideos(packages);
         let moved = false;
-        for(var i in files) {
-            var file = files[i];
-            var name = this.parseName(path.basename(file));
-            if (name.isVideo) {
-                console.log(name);
-                let dir;
-                let dest;
-                if (name.isTv) {
-                    dir = path.join(this.tvDestination, name.title);
-                    await fs.ensureDir(dir);                    
-                    dest = path.join(dir, path.basename(file));
-
-                } else {
-                    dir = this.movieDestination;
-                    dest = path.join(dir, path.basename(file));
-                }
-                try {
-                    await fs.move(file, dest);
-                    moved = true;
-                    console.log(`moved ${path.basename(file)} to ${dest}`);
-                } catch(err) {
-                    console.error(err);
-                    return [false, moved];
-                }
+        for(var i in packages) {
+            var file = packages[i].file;
+            var name = this.parseName(file.fileName);
+            let dir;
+            let dest;
+            if (name.isTv) {
+                dir = path.join(this.tvDestination, name.title);
+                await fs.ensureDir(dir);                    
+                dest = path.join(dir, file.fileName);
+            } else {
+                dir = this.movieDestination;
+                dest = path.join(dir, file.fileName);
             }
+            try {
+                await fs.move(file, dest);
+                packages[i].file.destination = dest;
+                packages[i].file.moved = true;
+                console.log(`moved ${file.fileName} to ${dest}`);
+            } catch(err) {
+                console.error(err);
+                return [false, packages];
+            }
+            
         }
 
-        return [true,moved];
+        return [true, packages];
     }
 
     async cleanUp(): Promise<boolean> {
@@ -66,17 +74,42 @@ export default class FileService {
         return parsed;
     }
 
+    private findVideos(packages: jdPackage[]) {
+        let files = this.getFiles().filter(f => 
+            this.parseName(f.fileName).isVideo
+        );
+        packages.forEach(p => {
+            p.file = files.find(x => x.directoryName.includes(p.name));
+        });
 
-    private getFiles(dir, files_ = []){
+        return packages;
+    }
+    private getFiles(dir = this.dir, files_: File[] = []){
         var files = fs.readdirSync(dir);
         for (var i in files){
             var name = dir + '/' + files[i];
             if (fs.statSync(name).isDirectory()){
                 this.getFiles(name, files_);
             } else {
-                files_.push(name);
+                const dirs = path.dirname(name).split(path.sep);
+                files_.push({
+                    fileName: path.basename(name),
+                    fullPath: name,
+                    directoryName: dirs[dirs.length - 1],
+                    moved: false
+                });
             }
         }
         return files_;
     }
+
+
+}
+
+export interface File {
+    fileName: string;
+    fullPath: string;
+    directoryName: string;
+    destination?: string;
+    moved: boolean;
 }

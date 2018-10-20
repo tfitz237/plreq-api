@@ -8,7 +8,8 @@ import { SharedModule } from '../shared/shared.module';
 
 @Module({
     imports: [AuthModule,SharedModule],
-    controllers: [JdController, ],
-    providers: [JdService, FileService]
+    controllers: [JdController ],
+    providers: [JdService, FileService],
+    exports: [JdService, FileService]
 })
 export class JdModule {}

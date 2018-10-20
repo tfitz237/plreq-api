@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import  Configuration  from '../shared/configuration';
 import { iUser } from '../models/user';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -20,5 +21,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
     return user;
+  }
+  
+
+  async verifyJwt(token: string): Promise<iUser|boolean> {
+    try {
+      return new Promise<iUser>(resolve => {
+        jwt.verify(token, this.configuration.jwt.secret, async (err, decoded) => {
+          resolve(await this.authService.validateUser(decoded) ? decoded : false);
+        })
+      })
+
+    }
+    catch (e) {
+      console.log(e);
+    }
   }
 }

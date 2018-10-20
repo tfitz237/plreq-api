@@ -1,5 +1,5 @@
 import { Error } from './status';
-
+import { File} from '../jd/file.service';
 export interface jdConnectResponse {
     connected: boolean;
     error?: Error;
@@ -34,5 +34,6 @@ export interface jdPackage {
         eta: string;
         extraction?: string;
         speedInMb: string;
-    }
+    },
+    file: File
 }

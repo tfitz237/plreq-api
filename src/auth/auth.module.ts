@@ -12,12 +12,13 @@ import Configuration from '../shared/configuration';
         JwtModule.register({
             secretOrPrivateKey: new Configuration().jwt.secret,
             signOptions: {
-                expiresIn: 3600,
+                expiresIn: 172800,
             },
         }),
         SharedModule
     ],
     providers: [AuthService, JwtStrategy],
     controllers: [AuthController],
+    exports: [JwtStrategy]
 })
 export class AuthModule {}
