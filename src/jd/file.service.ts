@@ -49,9 +49,10 @@ export default class FileService {
                     try {
 
                         packages[j].files[i].destination = dest;
-                        packages[j].files[i].moved = true;
+                        
                         if (!file.moved) {
                             await fs.move(file.fullPath, dest);
+                            packages[j].files[i].moved = true;
                             console.log(`moved ${file.fileName} to ${dest}`);
                         }
                     } catch(err) {
