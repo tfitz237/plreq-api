@@ -68,8 +68,9 @@ export default class FileService {
 
     async cleanUp(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
-            rimraf(this.dir + '/*', () => resolve(true));
-        });
+            //rimraf(this.dir + '/*', () => resolve(true));
+            resolve(true);
+	});
         
     }
 
