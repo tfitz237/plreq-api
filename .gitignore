@@ -4,3 +4,4 @@ test/file/
 dist/
 coverage/
 db.sqlite3
+ormconfig.json
