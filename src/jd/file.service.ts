@@ -87,7 +87,18 @@ export default class FileService {
             this.parseName(f.fileName).isVideo
         );
         packages.forEach(p => {
-            p.files = files.filter(x => x.directoryName.includes(p.name));
+            p.files = files.filter(x => {
+                let count = 0;
+                const words = x.directoryName.split(' ');
+                const threshold = Math.floor(words.length / 2); 
+                words.forEach(word => {
+                    if (p.name.includes(word)) {
+                        count++;
+                    }
+                });
+
+                return count >= threshold;
+            });
         });
 
         return packages;

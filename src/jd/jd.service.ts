@@ -4,8 +4,10 @@ import Configuration from '../shared/configuration';
 import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
 import FileService from './file.service';
 import { WsGateway } from '../ws/ws.gateway';
+import { Logger, LogMe } from '../shared/log.service';
+import { LogLevel } from '../shared/log.entry.entity';
 @Injectable()
-export class JdService {
+export class JdService extends LogMe {
     isConnected: boolean = false;
     deviceId: string;
     links: jdLink[] = [];
@@ -13,8 +15,8 @@ export class JdService {
     pollPackages: boolean = true;
     private socket: WsGateway;
     constructor(private readonly fileService: FileService, 
-        private readonly config: Configuration) {
-        
+        private readonly config: Configuration, private readonly logService: Logger) {
+            super(logService)
     }
 
     setSocket(socket: WsGateway) {
@@ -67,7 +69,7 @@ export class JdService {
             if (this.pollPackages) {
                 this.setupPollingCache();
             }
-
+            await this.logInfo(this.initiate, "Initated connection with Jdownloader");
             return {
                 id: deviceId,
                 success: true,
@@ -100,8 +102,9 @@ export class JdService {
     async movePackages(): Promise<jdInit> {
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
-            if (packages.filter(x => x.files.every(y => y && y.moved)).length > 0) {
-                const cleaned = await this.cleanUp(packages.filter(x => x.files.every(y => y && y.moved)));
+            const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
+            if (movedPackages.length > 0) {
+                const cleaned = await this.cleanUp(movedPackages);
                 return cleaned;
             }
             return {
@@ -218,7 +221,7 @@ export class JdService {
                         if (a == -1) {
                             this.packages.splice(idx, 1);
                         }
-                    })
+                    })                   
                     if (pck.data.length == 1) {
                         return pck.data[0];
                     }
