@@ -25,6 +25,7 @@
     "@nestjs/core": "^5.1.0",
     "@nestjs/jwt": "^0.2.0",
     "@nestjs/passport": "^5.1.0",
+    "@nestjs/typeorm": "^5.2.2",
     "@nestjs/websockets": "^5.3.14",
     "axios": "^0.18.0",
     "fs-extra": "^7.0.0",
@@ -38,6 +39,8 @@
     "password-hash": "^1.2.2",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^6.2.2",
+    "sqlite": "^3.0.0",
+    "typeorm": "^0.2.8",
     "typescript": "^3.0.1"
   },
   "devDependencies": {

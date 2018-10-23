@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import Configuration from '../shared/configuration';
+import { Logger, LogMe } from '../shared/log.service';
+import { LogLevel } from '../shared/log.entry.entity';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
-export class ItiService {
+export class ItiService extends LogMe {
     isLoggedIn: boolean;
     cookie: any;
-    constructor(private readonly config: Configuration) {
+    constructor(private readonly config: Configuration, private readonly logService: Logger) {
+        super(logService);
     }
     async search(query: any, results = [], retry: number = 0): Promise<any> {
         if (await this.ensureLoggedIn()) {
@@ -30,8 +33,8 @@ export class ItiService {
                     if (filtered.length < result.data.length && results.length < 100) {
                         return this.search(query, results, ++retry);
                     }
-                }
-                
+                }          
+                this.log(this.search, LogLevel.INFORMATION, `Query: ${query}. Found ${results.length} filtered results`);     
                 return results;
             }
             catch (e) {

@@ -3,3 +3,4 @@ node_modules/
 test/file/
 dist/
 coverage/
+db.sqlite3
