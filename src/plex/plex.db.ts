@@ -44,8 +44,28 @@ export default class PlexDb {
             \`index\`, 
             title
         `);
-        return data;      
+
+        let data2 = await this.db.all(`SELECT * FROM 
+        (SELECT REPLACE(guid, '?lang=en', '%') as showGuid, title as showTitle
+        FROM metadata_items 
+        WHERE title LIKE '%${name}%' LIMIT 1) as s 
+        LEFT JOIN metadata_items 
+        ON metadata_items.guid LIKE s.showGuid`);
+        data2 = data2.map(x => {
+            const match = x.guid.match(/com.plexapp.agents.thetvdb:\/\/\d+(\/(\d+)|\/(\d+)\/(\d+))?\?lang=en/);
+            if (match != null && match[4]) {
+                return {
+                    season: parseInt(match[2] || match[3]),
+                    episode: parseInt(match[4]),
+                    show: x.showTitle,
+                    title: x.title
+                }
+            }
+        }).filter(x => !!x);
+        return data.concat(data2).sort((a, b) => (a.season * 100 + a.episode) - (b.season * 100 + b.episode));      
     }
+
+    
 
 
 }
