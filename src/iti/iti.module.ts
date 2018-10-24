@@ -9,6 +9,7 @@ import { TvSubscription } from './iti.tv.subscription.entity';
 @Module({
   imports: [AuthModule, SharedModule, TypeOrmModule.forFeature([TvSubscription])],
   controllers: [ItiController],
-  providers: [ItiService]
+  providers: [ItiService],
+  exports: [ItiService]
 })
 export class ItiModule {}
