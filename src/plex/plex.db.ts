@@ -78,12 +78,25 @@ export default class PlexDb {
         });
         return data.concat(filteredData2)
             .filter((x, i, a) => {
-             return    a.findIndex(y => y && y.season == x.season && y.episode == x.episode && y.show == x.show) == i
-
+                if (season != -1 && episode != -1) {
+                    return a.findIndex(y => y && y.season == x.season && y.episode == x.episode && y.show == x.show) == i;
+                } else if (season != -1) {
+                    return a.findIndex(y => y && y.season == x.season && y.show == x.show) == i;
+                }
+                else {   
+                    return true;
+                }
             })
-            .sort((a, b) => 
-                (a.season * 100 + a.episode) - (b.season * 100 + b.episode)
-            );      
+            .sort((a, b) => {
+                if (season != -1 && episode != -1) {
+                    return (a.season * 100 + a.episode) - (b.season * 100 + b.episode);
+                } else if (season != -1) {
+                    return a.season - b.season;
+                } else {
+                    return a > b ? 1 : -1;
+                }
+            })
+            ;      
     }
 
     
