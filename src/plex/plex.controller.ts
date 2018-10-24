@@ -8,11 +8,11 @@ export default class PlexController {
 
     @Post('tv-show-exists')
     async tvShowExists(@Body() query: any) {
-        return await this.plexDb.tvShowExists(query.name, query.season);
+        return await this.plexDb.tvShowExists(query.name, query.season, query.episode);
     }
 
     @Post('get-season')
     async tvShowGetSeason(@Body() query: any) {
-        return await this.plexDb.getTvSeason(query.name, query.season);
+        return await this.plexDb.getTvEpisodes(query.name, query.season, query.episode);
     }
 }

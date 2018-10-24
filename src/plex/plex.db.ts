@@ -12,15 +12,37 @@ export default class PlexDb {
         this.db = await sqlliteOpen(path.join(this.config.plex.dbLocation,'com.plexapp.plugins.library.db'));
     }
 
-    async tvShowExists(name: string, season: number): Promise<boolean> {
+    async tvShowExists(name: string, season: number = -1, episode: number = -1): Promise<boolean> {
         await this.connect();
-        const count = await this.db.get<number>(`SELECT COUNT(id) FROM metadata_item_views WHERE grandparent_title LIKE '%${name}%' AND parent_index = ${season}`);
+        const count = await this.db.get<number>(`
+        SELECT COUNT(id) F
+        ROM metadata_item_views 
+        WHERE 
+            grandparent_title LIKE '%${name}%' 
+            ${season != -1 ? `AND parent_index = ${season}`: ''} 
+            ${episode != -1 ? `AND parent_index = ${episode}`: ''}
+        `);
         return count > 0;
     }
 
-    async getTvSeason(name: string, season: number = -1): Promise<Episode[]> {
+    async getTvEpisodes(name: string, season: number = -1, episode: number = -1): Promise<Episode[]> {
         await this.connect();
-        const data = await this.db.all<Episode>(`SELECT DISTINCT parent_index as season, \`index\` as episode, grandparent_title as show, title FROM metadata_item_views WHERE grandparent_title LIKE '%${name}%' ${season != -1 ? `AND parent_index = ${season}`: ''} ORDER BY grandparent_title, parent_index, \`index\`, title`);
+        const data = await this.db.all<Episode>(`
+        SELECT DISTINCT 
+            parent_index as season, 
+            \`index\` as episode, 
+            grandparent_title as show, 
+            title FROM metadata_item_views 
+        WHERE 
+            grandparent_title LIKE '%${name}%' 
+            ${season != -1 ? `AND parent_index = ${season}`: ''} 
+            ${episode != -1 ? `AND episode_index = ${episode}`: ''} 
+        ORDER BY 
+            grandparent_title, 
+            parent_index, 
+            \`index\`, 
+            title
+        `);
         return data;      
     }
 
