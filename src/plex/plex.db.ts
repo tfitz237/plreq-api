@@ -37,7 +37,7 @@ export default class PlexDb {
         WHERE 
             grandparent_title LIKE '%${name}%' 
             ${season != -1 ? `AND parent_index = ${season}`: ''} 
-            ${episode != -1 ? `AND episode_index = ${episode}`: ''} 
+            ${episode != -1 ? `AND index = ${episode}`: ''} 
         ORDER BY 
             grandparent_title, 
             parent_index, 
