@@ -20,7 +20,7 @@ export class JdController {
 
     @Post('add-links')
     async addLinks(@Body() request: any): Promise<jdInit> {
-        return await this.jdService.addLinks(request.links, request.name);
+        return await this.jdService.addLinks(request.linkId, request.name);
     }
 
     @Get('clean-up')
