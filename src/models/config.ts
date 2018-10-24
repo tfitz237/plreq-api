@@ -18,5 +18,8 @@ export interface iConfiguration {
         host: string,
         user: string,
         pass: string
+    },
+    plex: {
+        dbLocation: string;
     }
 }

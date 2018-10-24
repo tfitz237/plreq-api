@@ -5,3 +5,4 @@ dist/
 coverage/
 db.sqlite3
 ormconfig.json
+com.plexapp.plugins.library.db*

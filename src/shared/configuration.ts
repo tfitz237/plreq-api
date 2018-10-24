@@ -13,8 +13,12 @@ export default class Configuration {
     _filePaths: any;
     _users: any;
     _iti: any;
+    _plex: any;
     get jd(): iConfiguration["jd"] { 
         return this._jd || this.getConfig().jd;
+    }
+    get plex(): iConfiguration["plex"] {
+        return this._plex || this.getConfig().plex;
     }
     get jwt(): iConfiguration["jwt"] {
         return this._jwt || this.getConfig().jwt;

@@ -59,11 +59,11 @@ export class LogMe {
         this.log(entrance, LogLevel.WARNING, message);
     }
 
-    logError(entrance, message, exception) {
+    logError(entrance, message, exception = null) {
         this.log(entrance, LogLevel.INFORMATION, message, exception);
     }
 
-    logFatal(entrance, message, exception) {
+    logFatal(entrance, message, exception = null) {
         this.log(entrance, LogLevel.FATAL, message, exception);
     }
 }

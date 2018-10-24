@@ -57,6 +57,7 @@ export class JdService extends LogMe {
         const response = !this.isConnected ? await this.connect() : {connected: true};
         
         if (!response.connected) {
+            this.logError(this.initiate, 'Could not connect to Jdownloader', response.error);
             throw new HttpException({
                 success: false,
                 error: response.error
@@ -76,6 +77,7 @@ export class JdService extends LogMe {
                 packages: packages
             };
         } else {
+            this.logError(this.initiate, 'No Jdownloader Devices found.');
             throw new HttpException({
                 success: false,
                 error: {
@@ -103,6 +105,7 @@ export class JdService extends LogMe {
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
+            await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x=>`${x.files.length} files: ${x.files[0].fileName} to ${x.files[0].destination}`)}`);
             if (movedPackages.length > 0) {
                 const cleaned = await this.cleanUp(movedPackages);
                 return cleaned;
@@ -120,9 +123,9 @@ export class JdService extends LogMe {
 
     private get finishedPackages() {
         return this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK"));
-
     }
-   
+
+
     private anyPackagesFinished(stopOnExtracted: boolean): boolean {
         if (this.finishedPackages.length > 0) {
             if (stopOnExtracted) {                
@@ -136,6 +139,7 @@ export class JdService extends LogMe {
 
     async cleanUp(finished: jdPackage[] = this.finishedPackages): Promise<jdInit> {     
         try {
+            await this.logInfo(this.cleanUp, `Cleaning up ${finished.length} packages named: ${finished.map(x => x.name).join(', ')}`)
             let result = await jdApi.cleanUp(this.deviceId, finished.map(x => x.uuid));
             const packages = await this.getPackages(false, null, false) as jdPackage[];
             if (packages.length == 0) {
@@ -228,7 +232,7 @@ export class JdService extends LogMe {
                     return pck.data;
                 } catch {}
             }
-
+            await this.logError(this.getPackages, `Error finding packages`, null);
             throw new HttpException({
                 success: false,
                 error: {
@@ -276,8 +280,10 @@ export class JdService extends LogMe {
             try {
                 const linksString = links.join(' ');
                 resp = await jdApi.addLinks(linksString, this.deviceId, packageName);
+                await this.logInfo(this.addLinks, `Added ${links.length} linsk under the name ${packageName}`);
                 return { success: true};
             } catch (e) {
+                await this.logError(this.addLinks, `Error adding links`, e.error);
                 throw new HttpException({
                     success: false,
                     error: e.error

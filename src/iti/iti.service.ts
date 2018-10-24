@@ -3,13 +3,16 @@ import axios from 'axios';
 import Configuration from '../shared/configuration';
 import { Logger, LogMe } from '../shared/log.service';
 import { LogLevel } from '../shared/log.entry.entity';
+import { Repository } from 'typeorm';
+import { TvSubscription } from './iti.tv.subscription.entity';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
 export class ItiService extends LogMe {
     isLoggedIn: boolean;
     cookie: any;
-    constructor(private readonly config: Configuration, private readonly logService: Logger) {
+    constructor(// private readonly tvSubRepo: Repository<TvSubscription>, 
+        private readonly config: Configuration, private readonly logService: Logger) {
         super(logService);
     }
     async search(query: any, results = [], retry: number = 0): Promise<any> {
@@ -87,6 +90,16 @@ export class ItiService extends LogMe {
         }
         return links;
     }
+
+    // async subscribeTvShow(name: string, season: number) {
+    //     const exists = await this.tvSubRepo.findOne({name, season});
+    //     if (!exists) {
+    //         const sub = new TvSubscription();
+    //         sub.name = 
+    //     }
+
+    // }
+
 
     private async ensureLoggedIn(): Promise<boolean> {
         const status = await this.loginStatus();
