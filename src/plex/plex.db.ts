@@ -9,7 +9,7 @@ export default class PlexDb {
 
     constructor(private config: Configuration) {}
     async connect() {
-        this.db = await sqlliteOpen(path.join(this.config.plex.dbLocation + 'com.plexapp.plugins.library.db'));
+        this.db = await sqlliteOpen(path.join(this.config.plex.dbLocation,'com.plexapp.plugins.library.db'));
     }
 
     async tvShowExists(name: string, season: number): Promise<boolean> {
