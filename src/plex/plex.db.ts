@@ -15,8 +15,8 @@ export default class PlexDb {
     async tvShowExists(name: string, season: number = -1, episode: number = -1): Promise<boolean> {
         await this.connect();
         const count = await this.db.get<number>(`
-        SELECT COUNT(id) F
-        ROM metadata_item_views 
+        SELECT COUNT(id) 
+        FROM metadata_item_views 
         WHERE 
             grandparent_title LIKE '%${name}%' 
             ${season != -1 ? `AND parent_index = ${season}`: ''} 
@@ -32,7 +32,8 @@ export default class PlexDb {
             parent_index as season, 
             \`index\` as episode, 
             grandparent_title as show, 
-            title FROM metadata_item_views 
+            title 
+        FROM metadata_item_views 
         WHERE 
             grandparent_title LIKE '%${name}%' 
             ${season != -1 ? `AND parent_index = ${season}`: ''} 
