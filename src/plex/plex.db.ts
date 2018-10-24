@@ -50,7 +50,7 @@ export default class PlexDb {
         FROM metadata_items 
         WHERE title LIKE '%${name}%') as s 
         LEFT OUTER JOIN metadata_items 
-        ON metadata_items.guid LIKE s.showGuid WHERE guid LIKE 'com.plexapp.agents.thetvdb:%'`);
+        ON metadata_items.guid LIKE s.showGuid WHERE guid LIKE 'com.plexapp.agents.thetvdb:%' OR guid LIKE 'com.plexapp.agents.imdb:%'`);
         const filteredData2 = [];
         data2.forEach(x => {
             if (season != -1) {
