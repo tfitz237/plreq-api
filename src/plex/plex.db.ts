@@ -48,7 +48,7 @@ export default class PlexDb {
         let data2 = await this.db.all(`SELECT * FROM 
         (SELECT REPLACE(guid, '?lang=en', '%') as showGuid, title as showTitle
         FROM metadata_items 
-        WHERE title LIKE '%${name}%' LIMIT 1) as s 
+        WHERE title LIKE '%${name}%') as s 
         LEFT JOIN metadata_items 
         ON metadata_items.guid LIKE s.showGuid`);
         data2 = data2.map(x => {
