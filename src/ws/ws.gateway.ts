@@ -14,6 +14,7 @@ import FileService from '../jd/file.service';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { jdPackage } from '../models/jdownloader';
 import { guid } from '../auth/auth.service';
+import PlexDb from '../plex/plex.db';
 
   @WebSocketGateway()
   export class WsGateway implements OnGatewayInit, OnGatewayConnection {
@@ -22,12 +23,13 @@ import { guid } from '../auth/auth.service';
 
     authorizedGuid: string;
 
-    constructor(private jdService: JdService, private fileService: FileService, private jwtStrategy: JwtStrategy) {
+    constructor(private jdService: JdService, private fileService: FileService, private jwtStrategy: JwtStrategy, private plexDb: PlexDb) {
         this.authorizedGuid = guid();
     }
 
     afterInit(server) {
       this.jdService.setSocket(this);
+      this.plexDb.setSocket(this);
       this.fileService.setSocket(this);
     }
 
@@ -61,5 +63,14 @@ import { guid } from '../auth/auth.service';
         return await this.jdService.getPackages(false, null, false) as jdPackage[];
       }
     }
+
+    @SubscribeMessage('isInPlex')
+    async tvShowExists(client, data): Promise<boolean> {
+      if (client.authorized) {
+        return await this.plexDb.tvShowExists(data.name, data.season, data.episode);
+      }
+    }
+
+
   
   }

@@ -3,11 +3,18 @@ import { open as sqlliteOpen, Database } from 'sqlite';
 import { Episode } from "../models/plex";
 import Configuration from "../shared/configuration";
 import * as path from 'path';
+import { WsGateway } from "../ws/ws.gateway";
 @Injectable()
 export default class PlexDb {
     db: Database;
+    socket: WsGateway;
 
     constructor(private config: Configuration) {}
+
+    setSocket(socket: WsGateway) {
+        this.socket = socket;
+    }
+
     async connect() {
         this.db = await sqlliteOpen(path.join(this.config.plex.dbLocation,'com.plexapp.plugins.library.db'));
     }
