@@ -1,6 +1,8 @@
-import { Controller, Post, Body } from "@nestjs/common";
+import { Controller, Post, Body, UseGuards } from "@nestjs/common";
 import PlexDb from "./plex.db";
+import { AuthGuard } from "@nestjs/passport";
 
+@UseGuards(AuthGuard())
 @Controller('plex')
 export default class PlexController {
 
