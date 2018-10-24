@@ -43,30 +43,40 @@ export default class PlexDb {
         FROM metadata_items 
         WHERE title LIKE '%${name}%') as s 
         LEFT OUTER JOIN metadata_items 
-        ON metadata_items.guid LIKE s.showGuid`);
-        data2 = data2.map(x => {
+        ON metadata_items.guid LIKE s.showGuid WHERE guid LIKE 'com.plexapp.agents.thetvdb:%'`);
+        const filteredData2 = [];
+        data2.forEach(x => {
             if (season != -1) {
                 const match = x.guid.match(/com.plexapp.agents.thetvdb:\/\/\d+(\/(\d+)|\/(\d+)\/(\d+))?\?lang=en/);
-                if (match != null && match[4]) {
-                    return {
+                if (match != null && match[4] && 
+                    (match[2] == season || match[3] == season) && (episode != -1 && match[4] == episode || episode == -1)
+                    ) {
+                    filteredData2.push({
                         season: parseInt(match[2] || match[3]),
                         episode: parseInt(match[4]),
                         show: x.showTitle,
                         title: x.title
-                    };
-                }             
+                    });
+                }           
             }
             else if (season == -1 && episode == -1) {
                 const match = x.guid.match(/com.plexapp.agents.imdb:\/\/tt\d+(\/(\d+)|\/(\d+)\/(\d+))?/);
                 if (match != null) {
-                    return {
+                    filteredData2.push({
                         title: x.title
-                    };
+                    });
                 }
                 
             }
-        }).filter(x => !!x);
-        return data.concat(data2).sort((a, b) => (a.season * 100 + a.episode) - (b.season * 100 + b.episode));      
+        });
+        return data.concat(filteredData2)
+            .filter((x, i, a) => {
+             return    a.findIndex(y => y && y.season == x.season && y.episode == x.episode && y.show == x.show) == i
+
+            })
+            .sort((a, b) => 
+                (a.season * 100 + a.episode) - (b.season * 100 + b.episode)
+            );      
     }
 
     
