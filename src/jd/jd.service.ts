@@ -6,6 +6,7 @@ import FileService from './file.service';
 import { WsGateway } from '../ws/ws.gateway';
 import { Logger, LogMe } from '../shared/log.service';
 import { LogLevel } from '../shared/log.entry.entity';
+import { ItiService } from '../iti/iti.service';
 @Injectable()
 export class JdService extends LogMe {
     isConnected: boolean = false;
@@ -15,7 +16,7 @@ export class JdService extends LogMe {
     pollPackages: boolean = true;
     private socket: WsGateway;
     constructor(private readonly fileService: FileService, 
-        private readonly config: Configuration, private readonly logService: Logger) {
+        private readonly config: Configuration, private readonly logService: Logger, private readonly itiService: ItiService) {
             super(logService)
     }
 
@@ -272,10 +273,10 @@ export class JdService extends LogMe {
         
     }
 
-    async addLinks(links: string[], packageName: string): Promise<jdInit> {
+    async addLinks(linkId: number, packageName: string): Promise<jdInit> {
         const response = await this.initiate();
         if (response.success) {
-            
+            let links = await this.itiService.getLinks(linkId);
             let resp;
             try {
                 const linksString = links.join(' ');

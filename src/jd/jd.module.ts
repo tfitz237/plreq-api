@@ -4,10 +4,11 @@ import { JdController } from './jd.controller';
 import { AuthModule } from '../auth/auth.module';
 import FileService from './file.service';
 import { SharedModule } from '../shared/shared.module';
+import { ItiModule } from '../iti/iti.module';
 
 
 @Module({
-    imports: [AuthModule,SharedModule],
+    imports: [AuthModule,SharedModule, ItiModule],
     controllers: [JdController ],
     providers: [JdService, FileService],
     exports: [JdService, FileService]
