@@ -7,6 +7,7 @@ import { AuthModule } from '../auth/auth.module';
 @Module({
     imports: [AuthModule, SharedModule],
     controllers: [PlexController],
-    providers: [PlexDb]
+    providers: [PlexDb],
+    exports: [PlexDb]
 })
 export class PlexModule {}
