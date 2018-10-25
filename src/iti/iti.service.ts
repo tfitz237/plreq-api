@@ -5,13 +5,14 @@ import { Logger, LogMe } from '../shared/log.service';
 import { LogLevel } from '../shared/log.entry.entity';
 import { Repository } from 'typeorm';
 import { TvSubscription } from './iti.tv.subscription.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
 export class ItiService extends LogMe {
     isLoggedIn: boolean;
     cookie: any;
-    constructor(// private readonly tvSubRepo: Repository<TvSubscription>, 
+    constructor(@InjectRepository(TvSubscription) private readonly tvSubRepo: Repository<TvSubscription>, 
         private readonly config: Configuration, private readonly logService: Logger) {
         super(logService);
     }

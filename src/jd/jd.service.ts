@@ -106,7 +106,7 @@ export class JdService extends LogMe {
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
-            await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x=>`${x.files.length} files: ${x.files[0].fileName} to ${x.files[0].destination}`)}`);
+            await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x=>`${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName: 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`)}`);
             if (movedPackages.length > 0) {
                 const cleaned = await this.cleanUp(movedPackages);
                 return cleaned;

@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import * as pwHash from 'password-hash';
 import { JwtService } from '@nestjs/jwt';
 import { iUser } from '../models/user';
 import Configuration from '../shared/configuration';
+import { Repository, MoreThan } from 'typeorm';
+import { User } from './auth.user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 
 export enum UserLevel {
@@ -15,22 +18,38 @@ export enum UserLevel {
 @Injectable()
 export class AuthService {
     users: iUser[];
-    constructor(private readonly jwtService: JwtService, private readonly config: Configuration) {
-        this.users = this.config.users.map(user => {
-            user.password = pwHash.generate(user.password);
-            return user;
-        });
+    constructor(private readonly jwtService: JwtService, 
+        private readonly config: Configuration,
+        @InjectRepository(User) private readonly userRepo: Repository<User>
+        ) {
     }
 
-    validateUser(payload: iUser): Promise<boolean> {
-        const user = this.users.find(u => u.userGuid == payload.userGuid && u.level > UserLevel.Guest); 
-        return Promise.resolve(!!user);
+    async validateUser(payload: iUser): Promise<boolean> {
+        if (payload) {
+            const user = await this.userRepo.findOne({userGuid: payload.userGuid, level: MoreThan(UserLevel.Guest)}); 
+            return !!user;
+        }
+        return false;
     }
 
-    requestToken(inputUser: iUser): Promise<string> {
+    async requestToken(inputUser: iUser): Promise<string> {
         // TODO: Database integration for un/pw
-        const user = this.users.find(u => u.username == inputUser.username && pwHash.verify(inputUser.password, u.password)); 
-        return Promise.resolve(!!user ? this.jwtService.sign({ userGuid: user.userGuid }) : null);
+        const user = await this.userRepo.findOne({ username: inputUser.username}); 
+        const verified = user ? pwHash.verify(inputUser.password, user.password) : false;
+        return Promise.resolve(verified ? this.jwtService.sign({ userGuid: user.userGuid, level: user.level }) : null);
+    }
+
+    async createUser(payload: iUser) {
+        const user = await this.userRepo.findOne({userGuid: payload.userGuid});
+        if (user && !user.username && !user.password){ 
+            user.password = pwHash.generate(payload.password);
+            user.level = UserLevel.User;
+            user.username = payload.username;
+            const success = await this.userRepo.save(user);
+            return !!success;
+        }
+
+        return false; 
     }
 }
 

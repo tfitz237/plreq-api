@@ -6,6 +6,8 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { SharedModule } from '../shared/shared.module';
 import Configuration from '../shared/configuration';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './auth.user.entity';
 @Module({
     imports: [
         PassportModule.register({ defaultStrategy: 'jwt' }), 
@@ -15,10 +17,11 @@ import Configuration from '../shared/configuration';
                 expiresIn: 172800,
             },
         }),
-        SharedModule
+        SharedModule,
+        TypeOrmModule.forFeature([User])
     ],
     providers: [AuthService, JwtStrategy],
     controllers: [AuthController],
-    exports: [JwtStrategy]
+    exports: [JwtStrategy, AuthService]
 })
 export class AuthModule {}
