@@ -24,7 +24,7 @@ export class ItiController {
         if (!request.episode) {
             return await this.itiService.findSeason(request.name, request.season);
         } else {
-            return await this.itiService.findEpisode(request.name, request.season, request.episode);
+            return [await this.itiService.findEpisode(request.name, request.season, request.episode)];
         }
     }
 }
