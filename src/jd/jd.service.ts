@@ -273,7 +273,7 @@ export class JdService extends LogMe {
         
     }
 
-    async addLinks(linkId: number, packageName: string): Promise<jdInit> {
+    async addLinks(linkId: string, packageName: string): Promise<jdInit> {
         const response = await this.initiate();
         if (response.success) {
             let links = await this.itiService.getLinks(linkId);

@@ -15,7 +15,7 @@ export class ItiController {
     }
 
     @Get('getLinks/:id')
-    async getLinks(@Param('id') linkId: number): Promise<any> {
+    async getLinks(@Param('id') linkId: string): Promise<any> {
         return await this.itiService.getLinks(linkId);
     }
 

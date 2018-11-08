@@ -17,7 +17,7 @@ export class TvSubscription {
     @Column()
     private hasEpisodes: string;
 
-    get HasEpisodes() { return JSON.parse(this.hasEpisodes); }
+    get HasEpisodes(): number[] { return JSON.parse(this.hasEpisodes); }
 
     @Column()
     numberOfEpisodes: number;

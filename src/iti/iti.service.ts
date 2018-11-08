@@ -3,9 +3,6 @@ import axios from 'axios';
 import Configuration from '../shared/configuration';
 import { Logger, LogMe } from '../shared/log.service';
 import { LogLevel } from '../shared/log.entry.entity';
-import { Repository } from 'typeorm';
-import { TvSubscription } from './iti.tv.subscription.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import { itiLink, itiError, itiQuery } from '../models/iti';
 import { TmdbService } from './tmdb.service';
 
@@ -14,12 +11,10 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 export class ItiService extends LogMe {
     isLoggedIn: boolean;
     cookie: any;
-    subscriptions: TvSubscription[] = [];
 
-    constructor(@InjectRepository(TvSubscription) private readonly tvSubRepo: Repository<TvSubscription>, 
+    constructor( 
         private readonly config: Configuration, private readonly logService: Logger, private readonly tmdbService: TmdbService) {
         super(logService);
-        this.setupPolling();
     }
     async search(query: itiQuery, results = [], retry: number = 0): Promise<itiLink[]|itiError> {
         if (await this.ensureLoggedIn()) {
@@ -59,7 +54,7 @@ export class ItiService extends LogMe {
     }
 
 
-    async getLinks(linkId: number): Promise<any> {
+    async getLinks(linkId: string): Promise<any> {
         if (await this.ensureLoggedIn()) {
             try {
                 const result = await axios.get(this.config.iti.host, {
@@ -79,22 +74,6 @@ export class ItiService extends LogMe {
         }
     }
 
-    async setupPolling() {
-        this.getSubscriptions();
-        //this.checkSubscriptions();
-    }
-
-    async getSubscriptions() {
-        const subs = await this.tvSubRepo.find();
-        subs.forEach(sub => {
-            const idx = this.subscriptions.findIndex(s => s.id == sub.id);
-            if (idx != -1) {
-                Object.assign(this.subscriptions[idx], sub);
-            } else {
-                this.subscriptions.push(sub);
-            }
-        });
-    }
 
 
     async findEpisode(name: string, season: any, episode: any, exists: boolean = false): Promise<itiLink|itiError> {
