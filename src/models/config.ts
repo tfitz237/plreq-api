@@ -21,5 +21,8 @@ export interface iConfiguration {
     },
     plex: {
         dbLocation: string;
+    },
+    tmdb: {
+        apiKey: string;
     }
 }

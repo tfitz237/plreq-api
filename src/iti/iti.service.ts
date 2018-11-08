@@ -6,17 +6,22 @@ import { LogLevel } from '../shared/log.entry.entity';
 import { Repository } from 'typeorm';
 import { TvSubscription } from './iti.tv.subscription.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { itiLink, itiError, itiQuery } from '../models/iti';
+import { TmdbService } from './tmdb.service';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
 export class ItiService extends LogMe {
     isLoggedIn: boolean;
     cookie: any;
+    subscriptions: TvSubscription[] = [];
+
     constructor(@InjectRepository(TvSubscription) private readonly tvSubRepo: Repository<TvSubscription>, 
-        private readonly config: Configuration, private readonly logService: Logger) {
+        private readonly config: Configuration, private readonly logService: Logger, private readonly tmdbService: TmdbService) {
         super(logService);
+        this.setupPolling();
     }
-    async search(query: any, results = [], retry: number = 0): Promise<any> {
+    async search(query: itiQuery, results = [], retry: number = 0): Promise<itiLink[]|itiError> {
         if (await this.ensureLoggedIn()) {
             try {
                 const result = await axios.get(`${this.config.iti.host}/ajax.php`, {
@@ -47,7 +52,9 @@ export class ItiService extends LogMe {
             }
         }
         else {
-            return false;
+            return {
+                loggedIn: false
+            };
         }
     }
 
@@ -70,6 +77,70 @@ export class ItiService extends LogMe {
                 return e;
             }
         }
+    }
+
+    async setupPolling() {
+        this.getSubscriptions();
+        //this.checkSubscriptions();
+    }
+
+    async getSubscriptions() {
+        const subs = await this.tvSubRepo.find();
+        subs.forEach(sub => {
+            const idx = this.subscriptions.findIndex(s => s.id == sub.id);
+            if (idx != -1) {
+                Object.assign(this.subscriptions[idx], sub);
+            } else {
+                this.subscriptions.push(sub);
+            }
+        });
+    }
+
+
+    async findEpisode(name: string, season: any, episode: any, exists: boolean = false): Promise<itiLink|itiError> {
+        if (!exists) {
+            const fullSeason = await this.tmdbService.getSeason(name, season);
+            if (!fullSeason.find(x => parseInt(episode) == x)) {
+                return {
+                    error: `${name} s${season}e${episode} does not exist`
+                };
+            }
+        }
+        const formats =   [
+                `${name} s${season.toString().padStart(2, '0')}e${episode.toString().padStart(2, '0')}`,
+                `${name} s${season}e${episode}`
+        ];
+        
+        for(var i in formats) {
+            const query: itiQuery = {
+                query: formats[i],
+                parent: "TV",
+                child: ""
+            }
+            const results = await this.search(query) as itiLink[];
+            if (results.length > 0) {
+                const hdResult = results.find(l => l.child == "HD");
+                if (hdResult) {
+                    return hdResult;
+                } else {
+                    return results[0];
+                }
+            }
+        }
+
+        return {
+            error: "Episode Not Found"
+        };
+    }
+    
+
+    async findSeason(name: string, season: number) {
+        let results = [];
+        const episodes = await this.tmdbService.getSeason(name, season);
+        if (episodes && episodes.length > 0) {
+            episodes.forEach(episode => results.push(this.findEpisode(name, season, episode, true)));
+        } 
+        return await Promise.all(results);
     }
 
 

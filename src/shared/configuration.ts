@@ -14,6 +14,8 @@ export default class Configuration {
     _users: any;
     _iti: any;
     _plex: any;
+    _tmdb: any;
+    
     get jd(): iConfiguration["jd"] { 
         return this._jd || this.getConfig().jd;
     }
@@ -32,6 +34,9 @@ export default class Configuration {
     get iti(): iConfiguration["iti"] {
         return this._iti || this.getConfig().iti;
     }
+    get tmdb(): iConfiguration["tmdb"] {
+        return this._tmdb || this.getConfig().tmdb;
+    }
 
     getConfig(): iConfiguration {
         let file;
@@ -46,6 +51,7 @@ export default class Configuration {
         this._filePaths = config.filePaths;
         this._users = config.users;
         this._iti = config.iti;
+        this._tmdb = config.tmdb;
         return config;
     }
 
