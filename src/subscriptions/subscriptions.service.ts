@@ -102,7 +102,7 @@ export class SubscriptionsService extends LogMe{
             tvSub.name = name;
             tvSub.season = season;
             await this.tvSubRepo.save(tvSub);
-            await this.checkSubscriptions();
+            this.checkSubscriptions();
         }
         catch (e) {
             console.log(e);
