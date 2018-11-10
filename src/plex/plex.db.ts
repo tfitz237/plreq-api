@@ -56,7 +56,7 @@ export default class PlexDb {
             if (season != -1) {
                 const match = x.guid.match(/com.plexapp.agents.thetvdb:\/\/\d+(\/(\d+)|\/(\d+)\/(\d+))?\?lang=en/);
                 if (match != null && match[4] && 
-                    (match[2] == season || match[3] == season) && (episode != -1 && match[4] == episode || episode == -1)
+                    (match[2] == season || match[3] == season) && ((episode != -1 && match[4] == episode) || episode == -1)
                     ) {
                     filteredData2.push({
                         season: parseInt(match[2] || match[3]),
@@ -78,10 +78,8 @@ export default class PlexDb {
         });
         return data.concat(filteredData2)
             .filter((x, i, a) => {
-                if (season != -1 && episode != -1) {
+                if (season != -1) {
                     return a.findIndex(y => y && y.season == x.season && y.episode == x.episode && y.show == x.show) == i;
-                } else if (season != -1) {
-                    return a.findIndex(y => y && y.season == x.season && y.show == x.show) == i;
                 }
                 else {   
                     return true;

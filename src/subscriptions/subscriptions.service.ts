@@ -40,7 +40,7 @@ export class SubscriptionsService extends LogMe{
                 sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
                 Object.assign(this.subscriptions[idx], sub);
             } else {                
-                sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
+                sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);               
                 this.subscriptions.push(sub);
             }
         });
@@ -77,6 +77,7 @@ export class SubscriptionsService extends LogMe{
         try {
             const tvSub = new TvSubscription();
             tvSub.created = Date.now();
+            tvSub.numberOfEpisodes = (await this.tmdbService.getSeason(name, season)).length;
             tvSub.HasEpisodes = await this.plexDb.getEpisodeList(name, season);
             tvSub.name = name;
             tvSub.season = season;
