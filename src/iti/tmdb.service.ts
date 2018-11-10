@@ -9,20 +9,26 @@ export class TmdbService {
     constructor(private readonly config: Configuration) {
 
     }
-    async getSeason(name: string, season: number): Promise<tmdbEpisode[]> {
-        const result = await axios.get(`https://api.themoviedb.org/3/search/tv?api_key=${this.config.tmdb.apiKey}&query=${name}`);
-        const id = result.data.results && result.data.results.length > 0 ? result.data.results[0].id : false;
+    async getSeason(name: string, season: number, id?: string): Promise<{showId: string, episodes:tmdbEpisode[]}> {
+        if (!id) {
+            id = await this.getShowId(name);
+        }
         if (id) {
             const seasonResults = await axios.get(`https://api.themoviedb.org/3/tv/57243/season/${season}?api_key=${this.config.tmdb.apiKey}`);
-            return seasonResults.data.episodes;
+            return {showId: id, episodes: seasonResults.data.episodes};
         }
         return null;
 
     }
 
-    async getSeasonList(name: string, season: number): Promise<number[]>{
-        const results = await this.getSeason(name, season);
-        return results.map(e => e.episode_number);
+    async getShowId(name: string) {
+        const result = await axios.get(`https://api.themoviedb.org/3/search/tv?api_key=${this.config.tmdb.apiKey}&query=${name}`);
+        return result.data.results && result.data.results.length > 0 ? result.data.results[0].id : false;
+    }
+
+    async getSeasonList(name: string, season: number, id?: string): Promise<number[]>{
+        const results = await this.getSeason(name, season, id);
+        return results.episodes.map(e => e.episode_number);
     }
 
 }

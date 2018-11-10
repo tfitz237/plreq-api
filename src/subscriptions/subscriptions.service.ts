@@ -66,7 +66,7 @@ export class SubscriptionsService extends LogMe{
 
     async checkSingleSubscription(sub: TvSubscription) {
         try {
-            let allEpisodes = await this.tmdbService.getSeason(sub.name, sub.season);
+            let allEpisodes = (await this.tmdbService.getSeason(sub.name, sub.season, sub.tmdbId)).episodes;
             
             allEpisodes = allEpisodes.filter(x => Date.parse(x.air_date) < Date.now());
             const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e.episode_number) == -1);
@@ -109,7 +109,9 @@ export class SubscriptionsService extends LogMe{
         try {
             const tvSub = new TvSubscription();
             tvSub.created = Date.now();
-            tvSub.numberOfEpisodes = (await this.tmdbService.getSeasonList(name, season)).length;
+            const data = await this.tmdbService.getSeason(name, season);
+            tvSub.numberOfEpisodes = data.episodes.length;
+            tvSub.tmdbId = data.showId;
             tvSub.HasEpisodes = await this.plexDb.getEpisodeList(name, season);
             tvSub.name = name;
             tvSub.season = season;
