@@ -115,7 +115,7 @@ export class ItiService extends LogMe {
 
     async findSeason(name: string, season: number) {
         let results = [];
-        const episodes = await this.tmdbService.getSeason(name, season);
+        const episodes = await this.tmdbService.getSeasonList(name, season);
         if (episodes && episodes.length > 0) {
             episodes.forEach(episode => results.push(this.findEpisode(name, season, episode, true)));
         } 
