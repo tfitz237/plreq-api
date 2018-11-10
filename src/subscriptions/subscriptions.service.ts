@@ -49,17 +49,22 @@ export class SubscriptionsService extends LogMe{
 
     async checkSubscriptions() {
         this.getSubscriptions();
-        await this.subscriptions.forEach(async sub => {
+        await this.subscriptions.forEach(async (sub, idx) => {
             const allEpisodes = await this.tmdbService.getSeason(sub.name, sub.season);
             const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e) != -1);
-            await missingEpisodes.forEach(async episode => {
-                const response = await this.itiService.findEpisode(sub.name, sub.season, episode);
-                const itiError = response as itiError;
-                const itiLink = response as itiLink;
-                if (!itiError.error && !itiError.loggedIn) {
-                    await this.jdService.addLinks(itiLink.linkid, itiLink.title);
-                }
-            });
+            if (missingEpisodes.length > 0) {    
+                await missingEpisodes.forEach(async episode => {
+                    const response = await this.itiService.findEpisode(sub.name, sub.season, episode);
+                    const itiError = response as itiError;
+                    const itiLink = response as itiLink;
+                    if (!itiError.error && !itiError.loggedIn) {
+                        await this.jdService.addLinks(itiLink.linkid, itiLink.title);
+                    }
+                });
+            } else {
+                await this.tvSubRepo.remove(sub);
+                this.subscriptions.splice(idx, 1);
+            }
         });
     }
 
