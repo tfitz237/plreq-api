@@ -70,8 +70,8 @@ export class SubscriptionsService extends LogMe{
                     newEp.itiStatus = ItiLinkStatus.DOWNLOADED;
                     newEp.episode = e;
                     newEp.season = sub.season;
-                    newEp.name = details ? details.name : '';
-                    sub.episodes.push(newEp)
+                    newEp.name = details ? details.name : 'Episode '+ newEp.episode;
+                    sub.episodes.push(newEp);
                 }
             })
         }

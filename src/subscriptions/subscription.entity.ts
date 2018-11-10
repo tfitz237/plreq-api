@@ -15,7 +15,7 @@ export class TvSubscription {
     @Column()
     season: number;
 
-    @OneToMany(type => TvEpisode, tvEp => tvEp.subscription, {cascade: true}) 
+    @OneToMany(type => TvEpisode, tvEp => tvEp.subscription, {cascade: true, onDelete: 'CASCADE'}) 
     episodes: TvEpisode[];
 
     get episodesInPlex() {
