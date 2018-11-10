@@ -20,7 +20,7 @@ export class TvSubscription {
     get HasEpisodes(): number[] { return JSON.parse(this.hasEpisodes); }
     set HasEpisodes(val) { this.hasEpisodes = JSON.stringify(val) }
 
-    @Column()
+    @Column({nullable: true})
     tmdbId: string;
 
     @Column()
