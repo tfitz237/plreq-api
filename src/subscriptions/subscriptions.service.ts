@@ -59,25 +59,31 @@ export class SubscriptionsService extends LogMe{
             if (idx == "0") {
                 await this.checkSingleSubscription(this.subscriptions[idx])
             } else {
-                setTimeout(async () => await this.checkSingleSubscription(this.subscriptions[idx]) , 2000);
+                await setTimeout(async () => await this.checkSingleSubscription(this.subscriptions[idx]) , 2000);
             }
         }
     }
 
     async checkSingleSubscription(sub: TvSubscription) {
-        let allEpisodes = await this.tmdbService.getSeason(sub.name, sub.season);
-        allEpisodes = allEpisodes.filter(x => Date.parse(x.air_date) < Date.now());
-        const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e.episode_number) == -1);
-        if (missingEpisodes.length > 0) {    
-            for(var i in missingEpisodes) {
-                const episode = missingEpisodes[i];
-                const response = await this.itiService.findEpisode(sub.name, sub.season, episode);
-                const itiError = response as itiError;
-                const itiLink = response as itiLink;
-                if (!itiError.error && !itiError.loggedIn) {
-                    await this.jdService.addLinks(itiLink.linkid, itiLink.title);
+        try {
+            let allEpisodes = await this.tmdbService.getSeason(sub.name, sub.season);
+            
+            allEpisodes = allEpisodes.filter(x => Date.parse(x.air_date) < Date.now());
+            const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e.episode_number) == -1);
+            if (missingEpisodes.length > 0) {    
+                for(var i in missingEpisodes) {
+                    const episode = missingEpisodes[i];
+                    const response = await this.itiService.findEpisode(sub.name, sub.season, episode);
+                    const itiError = response as itiError;
+                    const itiLink = response as itiLink;
+                    if (!itiError.error && !itiError.loggedIn) {
+                        await this.jdService.addLinks(itiLink.linkid, itiLink.title);
+                    }
                 }
             }
+        }
+        catch (e) {
+            console.log(e);
         }
     }
     async removeSubscription(name?: string, season?: number, id: number = -1) {
