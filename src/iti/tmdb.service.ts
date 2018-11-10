@@ -14,7 +14,7 @@ export class TmdbService {
             id = await this.getShowId(name);
         }
         if (id) {
-            const seasonResults = await axios.get(`https://api.themoviedb.org/3/tv/57243/season/${season}?api_key=${this.config.tmdb.apiKey}`);
+            const seasonResults = await axios.get(`https://api.themoviedb.org/3/tv/${id}/season/${season}?api_key=${this.config.tmdb.apiKey}`);
             return {showId: id, episodes: seasonResults.data.episodes};
         }
         return null;
