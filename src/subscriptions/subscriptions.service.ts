@@ -39,9 +39,11 @@ export class SubscriptionsService extends LogMe{
             const idx = this.subscriptions.findIndex(s => s.id == sub.id);
             if (idx != -1) {
                 sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
+                this.tvSubRepo.save(sub);
                 Object.assign(this.subscriptions[idx], sub);
             } else {                
-                sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);               
+                sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);  
+                this.tvSubRepo.save(sub);             
                 this.subscriptions.push(sub);
             }           
         }
