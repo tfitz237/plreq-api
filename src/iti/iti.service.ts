@@ -78,7 +78,7 @@ export class ItiService extends LogMe {
 
     async findEpisode(name: string, season: any, episode: any, exists: boolean = false): Promise<itiLink|itiError> {
         if (!exists) {
-            const fullSeason = await this.tmdbService.getSeason(name, season);
+            const fullSeason = await this.tmdbService.getSeasonList(name, season);
             if (!fullSeason.find(x => parseInt(episode) == x)) {
                 return {
                     error: `${name} s${season}e${episode} does not exist`
