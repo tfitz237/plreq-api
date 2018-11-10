@@ -6,7 +6,7 @@ export class TvEpisode {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(type => TvSubscription, tvsub => tvsub.episodes)
+    @ManyToOne(type => TvSubscription, tvsub => tvsub.episodes, {onDelete: 'CASCADE'})
     subscription: TvSubscription;
 
     @Column()
