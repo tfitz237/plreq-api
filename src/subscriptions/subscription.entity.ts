@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { TvEpisode } from "./suscription.episode.entity";
 
 @Entity()
 export class TvSubscription {
@@ -14,21 +15,25 @@ export class TvSubscription {
     @Column()
     season: number;
 
+    @OneToMany(type => TvEpisode, tvEp => tvEp.subscription, {cascade: true}) 
+    episodes: TvEpisode[];
+
+    get episodesInPlex() {
+        return this.episodes.filter(x => x.inPlex);
+    }
+
+    get episodesNotInPlex() {
+        return this.episodes.filter(x => !x.inPlex);
+    }
+
+    get episodeNumbers() {
+        return this.episodes.map(x => x.episode);
+    }
+    get numberOfEpisodes() {
+        return this.episodes.length;
+    }
+
     @Column()
-    private hasEpisodes: string;
-
-    get HasEpisodes(): number[] { return JSON.parse(this.hasEpisodes); }
-    set HasEpisodes(val) { this.hasEpisodes = JSON.stringify(val) }
-
-    @Column({nullable: true})
     tmdbId: string;
 
-    @Column()
-    private missingEpisodes: string;
-
-    get MissingEpisodes(): [number,boolean][] { return JSON.parse(this.hasEpisodes); }
-    set MissingEpisodes(val) { this.hasEpisodes = JSON.stringify(val) }
-
-    @Column()
-    numberOfEpisodes: number;
 }
