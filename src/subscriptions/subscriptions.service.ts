@@ -65,12 +65,12 @@ export class SubscriptionsService extends LogMe{
                 if (!found) {
                     const newEp = new TvEpisode();
                     const details = allEpisodes.find(x => x.episode_number == e);
-                    newEp.airDate = details.air_date || "01-01-9999";
+                    newEp.airDate = details ? details.air_date || "01-01-9999" : "01-01-9999";
                     newEp.inPlex = true;
                     newEp.itiStatus = ItiLinkStatus.DOWNLOADED;
                     newEp.episode = e;
                     newEp.season = sub.season;
-                    newEp.name = details.name;
+                    newEp.name = details ? details.name : '';
                     sub.episodes.push(newEp)
                 }
             })
