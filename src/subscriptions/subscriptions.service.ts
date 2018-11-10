@@ -61,10 +61,8 @@ export class SubscriptionsService extends LogMe{
                         await this.jdService.addLinks(itiLink.linkid, itiLink.title);
                     }
                 });
-            } else {
-                await this.tvSubRepo.remove(sub);
-                this.subscriptions.splice(idx, 1);
             }
+            
         });
     }
 
