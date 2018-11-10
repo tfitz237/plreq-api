@@ -37,8 +37,8 @@ export class SubscriptionsService extends LogMe{
         const subs = await this.tvSubRepo.find();
         for (let i in subs) {
             const sub = subs[i];
-            const idx = this.subscriptions.findIndex(s => s.id == sub.id);
             await this.updateEpisodes(sub);
+            const idx = this.subscriptions.findIndex(s => s.id == sub.id);            
             if (idx != -1) {
                 Object.assign(this.subscriptions[idx], sub);
             } else {                          
@@ -149,11 +149,11 @@ export class SubscriptionsService extends LogMe{
         return false;
     }
 
-    async addSubscription(name: string, season: number): Promise<boolean> {
+    async addSubscription(name: string, season: number): Promise<TvSubscription> {
         
         const found = await this.tvSubRepo.findOne({name, season});
         if (found) {
-            return false;
+            return null;
         }
         try {
             const tvSub = new TvSubscription();
@@ -164,15 +164,13 @@ export class SubscriptionsService extends LogMe{
             tvSub.season = season;
             await this.updateEpisodes(tvSub, false);
             await this.tvSubRepo.save(tvSub);
-            this.checkSubscriptions();
+            await this.checkSingleSubscription(tvSub);
+            return tvSub;
         }
         catch (e) {
             console.log(e);
-            return false;
+            return null;
         }
-
-
-        return true;
     }
 
 }
