@@ -34,7 +34,8 @@ export class SubscriptionsService extends LogMe{
     
     async getSubscriptions(): Promise<TvSubscription[]> {
         const subs = await this.tvSubRepo.find();
-        await subs.forEach(async sub => {
+        for (let i in subs) {
+            const sub = subs[i];
             const idx = this.subscriptions.findIndex(s => s.id == sub.id);
             if (idx != -1) {
                 sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
@@ -43,27 +44,29 @@ export class SubscriptionsService extends LogMe{
                 sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);               
                 this.subscriptions.push(sub);
             }
-        });
+        }
         return this.subscriptions;
     }
 
     async checkSubscriptions() {
-        this.getSubscriptions();
-        await this.subscriptions.forEach(async (sub, idx) => {
+        await this.getSubscriptions();
+        for(let idx in this.subscriptions) {
+            const sub = this.subscriptions[idx];
             const allEpisodes = await this.tmdbService.getSeason(sub.name, sub.season);
-            const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e) != -1);
+            const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e) == -1);
             if (missingEpisodes.length > 0) {    
-                await missingEpisodes.forEach(async episode => {
+                for(var i in missingEpisodes) {
+                    const episode = missingEpisodes[i];
                     const response = await this.itiService.findEpisode(sub.name, sub.season, episode);
                     const itiError = response as itiError;
                     const itiLink = response as itiLink;
                     if (!itiError.error && !itiError.loggedIn) {
                         await this.jdService.addLinks(itiLink.linkid, itiLink.title);
                     }
-                });
+                }
             }
             
-        });
+        }
     }
 
     async addSubscription(name: string, season: number): Promise<boolean> {
