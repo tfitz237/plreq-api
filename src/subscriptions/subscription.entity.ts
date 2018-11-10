@@ -24,5 +24,11 @@ export class TvSubscription {
     tmdbId: string;
 
     @Column()
+    private missingEpisodes: string;
+
+    get MissingEpisodes(): [number,boolean][] { return JSON.parse(this.hasEpisodes); }
+    set MissingEpisodes(val) { this.hasEpisodes = JSON.stringify(val) }
+
+    @Column()
     numberOfEpisodes: number;
 }
