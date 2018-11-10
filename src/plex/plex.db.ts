@@ -99,6 +99,12 @@ export default class PlexDb {
             ;      
     }
 
+    async getEpisodeList(name: string, season: number = -1) {
+        const episodes = await this.getTvEpisodes(name, season);
+
+        return episodes.map(x => x.episode);
+    }
+
     
 
 

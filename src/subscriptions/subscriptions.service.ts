@@ -7,7 +7,8 @@ import { LogMe, Logger } from '../shared/log.service';
 import { ItiService } from '../iti/iti.service';
 import { JdService } from '../jd/jd.service';
 import { TmdbService } from '../iti/tmdb.service';
-import { itiLink } from '../models/iti';
+import { itiLink, itiError } from '../models/iti';
+import PlexDb from '../plex/plex.db';
 @Injectable()
 export class SubscriptionsService extends LogMe{
 
@@ -17,7 +18,8 @@ export class SubscriptionsService extends LogMe{
     private readonly logService: Logger,
     private readonly itiService: ItiService,
     private readonly jdService: JdService,
-    private readonly tmdbService: TmdbService
+    private readonly tmdbService: TmdbService,
+    private readonly plexDb: PlexDb
     ) {
         super(logService);
         this.setupPolling();
@@ -30,16 +32,19 @@ export class SubscriptionsService extends LogMe{
     }
 
     
-    async getSubscriptions() {
+    async getSubscriptions(): Promise<TvSubscription[]> {
         const subs = await this.tvSubRepo.find();
-        subs.forEach(sub => {
+        await subs.forEach(async sub => {
             const idx = this.subscriptions.findIndex(s => s.id == sub.id);
             if (idx != -1) {
+                sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
                 Object.assign(this.subscriptions[idx], sub);
-            } else {
+            } else {                
+                sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
                 this.subscriptions.push(sub);
             }
         });
+        return this.subscriptions;
     }
 
     async checkSubscriptions() {
@@ -48,10 +53,38 @@ export class SubscriptionsService extends LogMe{
             const allEpisodes = await this.tmdbService.getSeason(sub.name, sub.season);
             const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e) != -1);
             await missingEpisodes.forEach(async episode => {
-                const itiLink = await this.itiService.findEpisode(sub.name, sub.season, episode) as itiLink;
-                await this.jdService.addLinks(itiLink.linkid, itiLink.title);
+                const response = await this.itiService.findEpisode(sub.name, sub.season, episode);
+                const itiError = response as itiError;
+                const itiLink = response as itiLink;
+                if (!itiError.error && !itiError.loggedIn) {
+                    await this.jdService.addLinks(itiLink.linkid, itiLink.title);
+                }
             });
         });
+    }
+
+    async addSubscription(name: string, season: number): Promise<boolean> {
+        
+        const found = await this.tvSubRepo.findOne({name, season});
+        if (found) {
+            return false;
+        }
+        try {
+            const tvSub = new TvSubscription();
+            tvSub.created = Date.now();
+            tvSub.HasEpisodes = await this.plexDb.getEpisodeList(name, season);
+            tvSub.name = name;
+            tvSub.season = season;
+            await this.tvSubRepo.save(tvSub);
+            await this.checkSubscriptions();
+        }
+        catch (e) {
+            console.log(e);
+            return false;
+        }
+
+
+        return true;
     }
 
 }

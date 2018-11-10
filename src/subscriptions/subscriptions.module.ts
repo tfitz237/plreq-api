@@ -6,9 +6,12 @@ import { ItiModule } from '../iti/iti.module';
 import { JdModule } from '../jd/jd.module';
 import { AuthModule } from '../auth/auth.module';
 import { SharedModule } from '../shared/shared.module';
+import { PlexModule } from '../plex/plex.module';
+import { SubscriptionsController } from './subscriptions.controller';
 
 @Module({
-    imports: [ TypeOrmModule.forFeature([TvSubscription]), ItiModule, JdModule, AuthModule, SharedModule],
-    providers: [SubscriptionsService]
+    imports: [ TypeOrmModule.forFeature([TvSubscription]), ItiModule, JdModule, AuthModule, SharedModule, PlexModule],
+    providers: [SubscriptionsService],
+    controllers: [SubscriptionsController]
 })
 export class SubscriptionsModule {}
