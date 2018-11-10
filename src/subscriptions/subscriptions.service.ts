@@ -43,8 +43,13 @@ export class SubscriptionsService extends LogMe{
             } else {                
                 sub.HasEpisodes = await this.plexDb.getEpisodeList(sub.name, sub.season);               
                 this.subscriptions.push(sub);
-            }
+            }           
         }
+        this.subscriptions.forEach((sub,idx) => {
+            if (subs.findIndex(x => x.id == sub.id) == -1) {
+                this.subscriptions.splice(idx, 1);
+            }
+        })
         return this.subscriptions;
     }
 
@@ -67,6 +72,20 @@ export class SubscriptionsService extends LogMe{
             }
             
         }
+    }
+
+    async removeSubscription(name?: string, season?: number, id: number = -1) {
+        let found;
+        if (id != -1) {
+            found = await this.tvSubRepo.findOne(id);
+        } else {
+            found = await this.tvSubRepo.findOne({name, season});
+        }
+        if (found) {
+            await this.tvSubRepo.remove(found);
+            return true;
+        }
+        return false;
     }
 
     async addSubscription(name: string, season: number): Promise<boolean> {
