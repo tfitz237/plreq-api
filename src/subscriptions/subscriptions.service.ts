@@ -57,8 +57,9 @@ export class SubscriptionsService extends LogMe{
         await this.getSubscriptions();
         for(let idx in this.subscriptions) {
             const sub = this.subscriptions[idx];
-            const allEpisodes = await this.tmdbService.getSeason(sub.name, sub.season);
-            const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e) == -1);
+            let allEpisodes = await this.tmdbService.getSeason(sub.name, sub.season);
+            allEpisodes = allEpisodes.filter(x => Date.parse(x.air_date) < Date.now());
+            const missingEpisodes = allEpisodes.filter(e => sub.HasEpisodes.indexOf(e.episode_number) == -1);
             if (missingEpisodes.length > 0) {    
                 for(var i in missingEpisodes) {
                     const episode = missingEpisodes[i];
@@ -97,7 +98,7 @@ export class SubscriptionsService extends LogMe{
         try {
             const tvSub = new TvSubscription();
             tvSub.created = Date.now();
-            tvSub.numberOfEpisodes = (await this.tmdbService.getSeason(name, season)).length;
+            tvSub.numberOfEpisodes = (await this.tmdbService.getSeasonList(name, season)).length;
             tvSub.HasEpisodes = await this.plexDb.getEpisodeList(name, season);
             tvSub.name = name;
             tvSub.season = season;
