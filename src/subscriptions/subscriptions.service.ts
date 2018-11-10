@@ -81,7 +81,7 @@ export class SubscriptionsService extends LogMe{
                 const found = sub.episodesNotInPlex.find(ep => ep.episode == e.episode_number && (ep.itiStatus != ItiLinkStatus.ERROR && ep.itiStatus != ItiLinkStatus.NOTFOUND));
                 if (!found) {
                     const newEp = new TvEpisode();
-                    newEp.airDate = e.air_date;
+                    newEp.airDate = e.air_date || "01-01-9999";
                     newEp.inPlex = false;
                     newEp.itiStatus = ItiLinkStatus.UNKNOWN;
                     newEp.episode = e.episode_number;
