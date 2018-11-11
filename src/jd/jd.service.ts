@@ -276,15 +276,16 @@ export class JdService extends LogMe {
     async addLinks(linkId: string, packageName: string): Promise<jdInit> {
         const response = await this.initiate();
         if (response.success) {
-            const packageExists = (await this.getPackages(false, null, false) as jdPackage[]).find(x => x.name == packageName);
+            let packageExists = (await this.getPackages(false, null, false) as jdPackage[]);
             if (packageExists) {
-                return {
-                    success: false,
-                    error: {
-                        src: 'JD',
-                        type: 'Package already exists'
+                if (packageExists.find(x => x.name == packageName))
+                    return {
+                        success: false,
+                        error: {
+                            src: 'JD',
+                            type: 'Package already exists'
+                        }
                     }
-                }
             }
             let links = await this.itiService.getLinks(linkId);
             let resp;
