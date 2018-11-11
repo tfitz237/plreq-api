@@ -25,6 +25,11 @@ export default class PlexDb {
         return data.length > 0;
     }
 
+    async movieExists(name: string): Promise<boolean> {
+        await this.connect();
+        const data = await this.getMovie(name);
+        return data.length > 0;
+    }
 
     async getTvShow(name: string)
      {

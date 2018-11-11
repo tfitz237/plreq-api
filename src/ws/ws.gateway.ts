@@ -72,7 +72,12 @@ import { iUser } from '../models/user';
     @SubscribeMessage('isInPlex')
     async tvShowExists(client, data): Promise<boolean> {
       if (client.authorized) {
-        return await this.plexDb.tvShowExists(data.name, data.season, data.episode);
+        if (data.type == 'TV') {
+          return await this.plexDb.tvShowExists(data.name, data.season, data.episode);
+        }
+        if (data.type == 'Movie') {
+          return await this.plexDb.movieExists(data.name);
+        }
       }
     }
 
