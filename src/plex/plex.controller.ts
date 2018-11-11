@@ -22,4 +22,9 @@ export default class PlexController {
     async getTvShow(@Body() query: any) {        
         return await this.plexDb.getTvShow(query.name);
     }
+
+    @Post('get-movie')
+    async getMovie(@Body() query: any) {
+        return await this.plexDb.getMovie(query.name);
+    }
 }
