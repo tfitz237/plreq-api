@@ -17,4 +17,9 @@ export default class PlexController {
     async tvShowGetSeason(@Body() query: any) {
         return await this.plexDb.getTvEpisodes(query.name, query.season, query.episode);
     }
+
+    @Post('get-show')
+    async getTvShow(@Body() query: any) {        
+        return await this.plexDb.getTvShow(query.name);
+    }
 }

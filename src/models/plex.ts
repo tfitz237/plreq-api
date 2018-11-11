@@ -1,9 +1,11 @@
 
 
 export interface Episode {
-    show: string;
-    title: string;
-    season: number;
-    episode: number;
+    season_episode: string;
+    show_title: string;
+    episode_title: string;
+    quality: string;
+    season?: number;
+    episode?: number;
 
 }
