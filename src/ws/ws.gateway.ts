@@ -75,7 +75,7 @@ import { iUser } from '../models/user';
         if (data.type == 'TV') {
           return await this.plexDb.tvShowExists(data.name, data.season, data.episode);
         }
-        if (data.type == 'Movie') {
+        if (data.type == 'Movies') {
           return await this.plexDb.movieExists(data.name);
         }
       }
