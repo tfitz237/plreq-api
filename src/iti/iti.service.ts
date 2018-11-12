@@ -89,7 +89,7 @@ export class ItiService extends LogMe {
                 `${name} s${season.toString().padStart(2, '0')}e${episode.toString().padStart(2, '0')}`,
                 `${name} s${season}e${episode}`
         ];
-        
+        let rtn;
         for(var i in formats) {
             const query: itiQuery = {
                 query: formats[i],
@@ -100,11 +100,17 @@ export class ItiService extends LogMe {
             if (results.length > 0) {
                 const hdResult = results.find(l => l.child == "HD");
                 if (hdResult) {
-                    return hdResult;
+                    rtn = hdResult;
                 } else {
-                    return results[0];
+                    rtn = results[0];
                 }
             }
+            if (rtn && rtn.child == "HD") {
+                return rtn;
+            }
+        }
+        if (rtn) {
+            return rtn;
         }
 
         return {
