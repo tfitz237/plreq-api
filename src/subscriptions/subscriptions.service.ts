@@ -116,7 +116,7 @@ export class SubscriptionsService extends LogMe{
             if (missingEpisodes.length > 0) {    
                 for(var i in missingEpisodes) {
                     let episode = missingEpisodes[i];
-                    const response = await this.itiService.findEpisode(sub.name, sub.season, episode);
+                    const response = await this.itiService.findEpisode(sub.name, sub.season, episode.episode);
                     const itiError = response as itiError;
                     const itiLink = response as itiLink;
                     if (!itiError.error && !itiError.loggedIn) {
