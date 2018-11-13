@@ -29,7 +29,7 @@ export class SubscriptionsService extends LogMe{
     
     async setupPolling() {
         this.checkSubscriptions();
-        setInterval(this.checkSubscriptions, 1000 * 60 * 60 * 6)
+        setInterval(() => this.checkSubscriptions(), 1000 * 60 * 60 * 6)
     }
 
     
