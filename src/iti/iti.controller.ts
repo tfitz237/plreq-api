@@ -1,24 +1,28 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ItiService } from './iti.service';
-import { AuthGuard } from '@nestjs/passport';
 import { itiQuery, itiLink, itiError, itiTvShowQuery } from '../models/iti';
+import { RolesGuard, Roles } from '../auth/auth.roles';
+import { UserLevel } from '../auth/auth.service';
 
-@UseGuards(AuthGuard())
+@UseGuards(RolesGuard)
 @Controller('iti')
 export class ItiController {
 
     constructor(private readonly itiService: ItiService) {}
 
+    @Roles(UserLevel.User)
     @Post('search')
     async search(@Body() request: itiQuery): Promise<itiLink[]|itiError> {
         return await this.itiService.search(request);
     }
 
+    @Roles(UserLevel.User)
     @Get('getLinks/:id')
     async getLinks(@Param('id') linkId: string): Promise<any> {
         return await this.itiService.getLinks(linkId);
     }
 
+    @Roles(UserLevel.User)
     @Post('search/tv')
     async getSeason(@Body() request: itiTvShowQuery, @Param('type') type: string): Promise<any> {
         if (!request.episode) {

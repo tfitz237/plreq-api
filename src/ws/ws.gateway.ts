@@ -6,9 +6,6 @@ import {
     OnGatewayInit,
     OnGatewayConnection,
   } from '@nestjs/websockets';
-  import { from, Observable } from 'rxjs';
-  import { map } from 'rxjs/operators';
-import { Injectable } from '@nestjs/common';
 import { JdService } from '../jd/jd.service';
 import FileService from '../jd/file.service';
 import { JwtStrategy } from '../auth/jwt.strategy';
@@ -40,8 +37,8 @@ import { iUser } from '../models/user';
 
     @SubscribeMessage('authorization')
     async authorizeUser(client, token) {
-      const decoded = await this.jwtStrategy.verifyJwt(token);
-      if (decoded) {
+      const decoded = await this.jwtStrategy.verifyJwt(token) as iUser;
+      if (decoded && decoded.level > UserLevel.Guest) {
         client.authorized = true;
         client.user = decoded;
         client.join(this.authorizedGuid);
