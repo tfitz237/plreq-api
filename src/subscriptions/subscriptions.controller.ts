@@ -10,13 +10,13 @@ export class SubscriptionsController {
 
     constructor(private readonly subService: SubscriptionsService) {}
 
-    @Roles(UserLevel.Admin)
+    @Roles(UserLevel.User)
     @Get()
     async getSubscriptions() {
         return await this.subService.getSubscriptions();
     }
 
-    @Roles(UserLevel.Admin)
+    @Roles(UserLevel.User)
     @Post()
     async addSubscriptions(@Body() body: any) {
         return await this.subService.addSubscription(body.name, body.season);

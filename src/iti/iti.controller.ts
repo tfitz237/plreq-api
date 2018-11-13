@@ -16,7 +16,7 @@ export class ItiController {
         return await this.itiService.search(request);
     }
 
-    @Roles(UserLevel.User)
+    @Roles(UserLevel.ItiUser)
     @Get('getLinks/:id')
     async getLinks(@Param('id') linkId: string): Promise<any> {
         return await this.itiService.getLinks(linkId);
@@ -30,5 +30,5 @@ export class ItiController {
         } else {
             return [await this.itiService.findEpisode(request.name, request.season, request.episode)];
         }
-    }
+    } 
 }

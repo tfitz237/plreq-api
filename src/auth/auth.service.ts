@@ -11,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 export enum UserLevel {
     Guest,
     User,
+    ItiUser,
     Admin,
     SuperAdmin
 }
