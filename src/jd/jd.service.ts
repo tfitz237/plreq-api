@@ -278,7 +278,7 @@ export class JdService extends LogMe {
         if (response.success) {
             let packageExists = (await this.getPackages(false, null, false) as jdPackage[]) || [];
             if (packageExists && packageExists.length) {
-                if (!packageExists.find(x => x.name == packageName)) {
+                if (packageExists.find(x => x.name == packageName)) {
                     return {
                         success: false,
                         error: {
