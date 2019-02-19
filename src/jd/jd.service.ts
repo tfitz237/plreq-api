@@ -126,7 +126,6 @@ export class JdService extends LogMe {
         return this.packages.filter(pack => pack.finished && pack.status && pack.status.includes("Extraction OK"));
     }
 
-
     private anyPackagesFinished(stopOnExtracted: boolean): boolean {
         if (this.finishedPackages.length > 0) {
             if (stopOnExtracted) {                
@@ -136,7 +135,6 @@ export class JdService extends LogMe {
             return true;
         }
     }
-
 
     async cleanUp(finished: jdPackage[] = this.finishedPackages): Promise<jdInit> {     
         try {
@@ -150,6 +148,22 @@ export class JdService extends LogMe {
                 return {
                     success: true
                 };
+            }
+        } catch (e) {
+            console.error(e);
+            return {
+                success: false
+            };
+        }
+    }
+
+    async removePackage(pkg: jdPackage): Promise<jdInit> {
+        try {
+            await this.logInfo(this.removePackage, `Removing download package named: ${pkg.name}`);
+            let result = await jdApi.cleanUp(this.deviceId, [pkg.uuid], "DELETE_ALL");
+            const packages = await this.getPackages(false, null, false) as jdPackage[];
+            return {
+                success: packages ? packages.findIndex(x => x.uuid == pkg.uuid) == -1 : false
             }
         } catch (e) {
             console.error(e);

@@ -31,4 +31,11 @@ export class ItiController {
             return [await this.itiService.findEpisode(request.name, request.season, request.episode)];
         }
     } 
+
+    @Roles(UserLevel.User)
+    @Get('getReferences/:id')
+    async getReferences(@Param('id') linkId: string): Promise<any> {
+        return await this.itiService.getImageRef(linkId);
+    }
+
 }

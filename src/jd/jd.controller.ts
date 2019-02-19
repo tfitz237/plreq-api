@@ -33,4 +33,10 @@ export class JdController {
         return await this.jdService.cleanUp();
     }
 
+    @Roles(UserLevel.User)
+    @Post('remove-package')
+    async removePackage(@Body() body): Promise<jdInit> {
+        return await this.jdService.removePackage(body);
+    }
+
 }

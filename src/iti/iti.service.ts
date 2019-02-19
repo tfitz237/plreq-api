@@ -74,7 +74,25 @@ export class ItiService extends LogMe {
         }
     }
 
-
+    async getImageRef(linkId: string): Promise<string[]> {
+        if (await this.ensureLoggedIn()) {
+            try {
+                const result = await axios.get(this.config.iti.host, {
+                    params: {
+                        'i': `SIG:${linkId}`
+                    },
+                    headers: {
+                        'Cookie': this.cookie
+                    }
+                });
+                return this.findImagesInPage(result.data);
+            }
+            catch (e) {
+                console.log(e);
+                return e;
+            }
+        }
+    }
 
     async findEpisode(name: string, season: any, episode: any, exists: boolean = false): Promise<itiLink|itiError> {
         if (!exists) {
@@ -129,7 +147,7 @@ export class ItiService extends LogMe {
     }
 
 
-    findLinksInPage(html: string) {       
+    findLinksInPage(html: string): string[] {       
         const links = [];
         const linksDiv = html.match(/<div.*id=\"links_mega\">(.*)<\/div>.*<div.*Password/);
         if (linksDiv) {
@@ -148,14 +166,25 @@ export class ItiService extends LogMe {
         return links;
     }
 
-    // async subscribeTvShow(name: string, season: number) {
-    //     const exists = await this.tvSubRepo.findOne({name, season});
-    //     if (!exists) {
-    //         const sub = new TvSubscription();
-    //         sub.name = 
-    //     }
-
-    // }
+    findImagesInPage(html: string): string[] {
+        const images = [];
+        const imagesDiv = html.match(/<div.*id=\"links_imgref\">(.*)<\/div>/);
+        var httpRegex = "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";
+        if (imagesDiv) {
+            const reg = /<a href="(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))" target="_blank">(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))<\/a><br class="clear" \/>/;
+            const gReg = /<a href="(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))" target="_blank">(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))<\/a><br class="clear" \/>/g;            
+            const linksInDiv = imagesDiv[1].match(gReg);
+            if (linksInDiv) {
+                linksInDiv.forEach(link => {
+                    const match = link.match(reg);
+                    if (match) {
+                        images.push(match[1]);
+                    }
+                });
+            }
+        }
+        return images;
+    }
 
 
     private async ensureLoggedIn(): Promise<boolean> {

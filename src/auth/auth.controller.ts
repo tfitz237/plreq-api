@@ -13,6 +13,6 @@ export class AuthController {
     async token(@Body() user: iUser): Promise<string> {
         return await this.authService.requestToken(user);
         
-    }
-    
+    }  
+      
 }
