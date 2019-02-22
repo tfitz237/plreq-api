@@ -3,7 +3,7 @@ import axios from 'axios';
 import Configuration from '../shared/configuration';
 import { Logger, LogMe } from '../shared/log.service';
 import { LogLevel } from '../shared/log.entry.entity';
-import { itiLink, itiError, itiQuery } from '../models/iti';
+import { itiLink, itiError, itiQuery, itiLinkResponse } from '../models/iti';
 import { TmdbService } from './tmdb.service';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -16,14 +16,14 @@ export class ItiService extends LogMe {
         private readonly config: Configuration, private readonly logService: Logger, private readonly tmdbService: TmdbService) {
         super(logService);
     }
-    async search(query: itiQuery, results = [], retry: number = 0): Promise<itiLink[]|itiError> {
+    async search(query: itiQuery, retry: number = 0, results = [] ): Promise<itiLinkResponse|itiError> {
         if (await this.ensureLoggedIn()) {
             try {
                 const result = await axios.get(`${this.config.iti.host}/ajax.php`, {
                     params: {
                         i: 'main',
                         which: encodeURIComponent(query.query),
-                        s: (retry * 100) + 1,
+                        s: (retry * 50) + 1,
                         p: query.parent,
                         c: query.child
                     },
@@ -32,14 +32,22 @@ export class ItiService extends LogMe {
                     }
                 });
                 if (result.data && result.data.length > 0) {
-                    const filtered = result.data.filter(link => query.query.split(' ').every(q => (link.parent == 'Movies' || link.parent == 'TV') && link.title.toLowerCase().includes(q.toLowerCase())));
+                    const filtered = result.data.filter(link => 
+                        query.query.split(' ').every(q => 
+                            (link.parent == 'Movies' || link.parent == 'TV') 
+                                && link.title.toLowerCase().includes(q.toLowerCase())
+                        )
+                    );
                     results = results.concat(filtered);
-                    if (filtered.length < result.data.length && results.length < 100) {
-                        return this.search(query, results, ++retry);
+                    if (filtered.length < result.data.length && results.length < 50) {
+                        return this.search(query, ++retry, results);
                     }
                 }          
                 this.log(this.search, LogLevel.INFORMATION, `Query: ${query}. Found ${results.length} filtered results`);     
-                return results;
+                return {
+                    page: retry,
+                    results: results
+                };
             }
             catch (e) {
                 console.log(e);
