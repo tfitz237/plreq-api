@@ -22,8 +22,9 @@ export interface itiQuery {
 }
 
 export interface itiTvShowQuery {
+    id?: number;
     name: string;
-    season: number;
+    season?: number;
     episode?: number;
 }
 

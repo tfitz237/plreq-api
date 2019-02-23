@@ -34,6 +34,6 @@ export class TvSubscription {
     }
 
     @Column()
-    tmdbId: string;
+    tmdbId: number;
 
 }

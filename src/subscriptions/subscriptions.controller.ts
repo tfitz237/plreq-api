@@ -19,7 +19,7 @@ export class SubscriptionsController {
     @Roles(UserLevel.User)
     @Post()
     async addSubscriptions(@Body() body: any) {
-        return await this.subService.addSubscription(body.name, body.season);
+        return await this.subService.addSubscription(body.name, body.season, body.id);
     }
 
     @Roles(UserLevel.Admin)

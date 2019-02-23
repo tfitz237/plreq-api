@@ -149,7 +149,7 @@ export class SubscriptionsService extends LogMe{
         return false;
     }
 
-    async addSubscription(name: string, season: number): Promise<TvSubscription> {
+    async addSubscription(name: string, season: number, id: number): Promise<TvSubscription> {
         
         const found = await this.tvSubRepo.findOne({name, season});
         if (found) {
@@ -158,7 +158,7 @@ export class SubscriptionsService extends LogMe{
         try {
             const tvSub = new TvSubscription();
             tvSub.created = Date.now();
-            const data = await this.tmdbService.getSeason(name, season);
+            const data = await this.tmdbService.getSeason(name, season, id);
             tvSub.tmdbId = data.showId;
             tvSub.name = name;
             tvSub.season = season;
