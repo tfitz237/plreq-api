@@ -26,6 +26,16 @@ export class TmdbService {
         return await this.mapTvSearchResults(result.data.results);
     }
 
+    async searchForMovie(name: string) {
+        const result = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${this.config.tmdb.apiKey}&query=${name}`);
+        return result.data.results;
+    }
+
+    async getMovie(id: number) {
+        const result = await axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${this.config.tmdb.apiKey}`);
+        return result.data;
+    }
+
     async getShowSeasons(id: number) {
         const result = await axios.get(`https://api.themoviedb.org/3/tv/${id}?api_key=${this.config.tmdb.apiKey}`);
         return this.mapSeasonSearchResults(result.data);

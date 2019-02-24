@@ -8,6 +8,7 @@ import { WsModule } from './ws/ws.module';
 import { TypeOrmModule} from '@nestjs/typeorm';
 import { PlexModule } from './plex/plex.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { TmdbModule } from './tmdb/tmdb.module';
 @Module({
   imports: [ 
     TypeOrmModule.forRoot(),
@@ -15,7 +16,10 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
     AuthModule, 
     ItiModule, 
     SharedModule, 
-    WsModule, PlexModule, SubscriptionsModule
+    WsModule, 
+    PlexModule, 
+    SubscriptionsModule, 
+    TmdbModule
   ],
   controllers: [AppController],
 })

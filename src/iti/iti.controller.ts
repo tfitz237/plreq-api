@@ -3,13 +3,12 @@ import { ItiService } from './iti.service';
 import { itiQuery, itiLink, itiError, itiTvShowQuery, itiLinkResponse } from '../models/iti';
 import { RolesGuard, Roles } from '../auth/auth.roles';
 import { UserLevel } from '../auth/auth.service';
-import { TmdbService } from './tmdb.service';
 
 @UseGuards(RolesGuard)
 @Controller('iti')
 export class ItiController {
 
-    constructor(private readonly itiService: ItiService, private readonly tmdbService: TmdbService) {}
+    constructor(private readonly itiService: ItiService) {}
 
     @Roles(UserLevel.User)
     @Post('search')
@@ -39,15 +38,6 @@ export class ItiController {
         return await this.itiService.getImageRef(linkId);
     }
 
-
-    @Roles(UserLevel.User)
-    @Post('tmdb/tv')
-    async searchForShow(@Body() request: itiTvShowQuery): Promise<any> {
-        if (request.id) {
-            return await this.tmdbService.getShowSeasons(request.id);
-        }
-        return await this.tmdbService.searchForShow(request.name);
-    }
 
 
 }

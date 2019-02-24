@@ -4,7 +4,7 @@ import Configuration from '../shared/configuration';
 import { Logger, LogMe } from '../shared/log.service';
 import { LogLevel } from '../shared/log.entry.entity';
 import { itiLink, itiError, itiQuery, itiLinkResponse } from '../models/iti';
-import { TmdbService } from './tmdb.service';
+import { TmdbService } from '../tmdb/tmdb.service';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
