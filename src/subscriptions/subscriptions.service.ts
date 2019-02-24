@@ -1,21 +1,40 @@
 import { Injectable } from '@nestjs/common';
 
 import { Repository } from 'typeorm';
-import { TvSubscription } from '../subscriptions/subscription.entity';
+import { TvSubscription } from './tv-subscription.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogMe, Logger } from '../shared/log.service';
 import { ItiService } from '../iti/iti.service';
 import { JdService } from '../jd/jd.service';
-import { TmdbService } from '../iti/tmdb.service';
+import { TmdbService } from '../tmdb/tmdb.service';
 import { itiLink, itiError } from '../models/iti';
 import PlexDb from '../plex/plex.db';
 import { TvEpisode, ItiLinkStatus } from './suscription.episode.entity';
+import { MovieSubscription } from './movie-subscription.entity';
 @Injectable()
 export class SubscriptionsService extends LogMe{
 
-    subscriptions: TvSubscription[] = [];
+    tvSubscriptions: TvSubscription[] = [];
+    movieSubscriptions: MovieSubscription[] = [];
+
+    qualitiesList = [
+        'SD',
+        '480P',
+        '480P DVDRIP',
+        '720P',
+        '720P BRRIP',
+        '720P WEB-DL',
+        '720P BDRIP',
+        '1080P',
+        '1080P BRRIP',
+        '1080P WEB-DL',
+        '1080P BDRIP',
+        '1080P BDRIP HEVC'
+    ];
+
     constructor(
         @InjectRepository(TvSubscription) private readonly tvSubRepo: Repository<TvSubscription>, 
+        @InjectRepository(MovieSubscription) private readonly movieSubRepo: Repository<MovieSubscription>,
     private readonly logService: Logger,
     private readonly itiService: ItiService,
     private readonly jdService: JdService,
@@ -25,32 +44,49 @@ export class SubscriptionsService extends LogMe{
         super(logService);
         this.setupPolling();
     }
-
-    
+   
     async setupPolling() {
-        this.checkSubscriptions();
-        setInterval(() => this.checkSubscriptions(), 1000 * 60 * 60 * 6)
+        this.checkTvSubscriptions();
+        setInterval(() => this.checkTvSubscriptions(), 1000 * 60 * 60 * 6)
     }
 
-    
-    async getSubscriptions(): Promise<TvSubscription[]> {
+    async getTvSubscriptions(): Promise<TvSubscription[]> {
         const subs = await this.tvSubRepo.find();
         for (let i in subs) {
             const sub = subs[i];
             await this.updateEpisodes(sub);
-            const idx = this.subscriptions.findIndex(s => s.id == sub.id);            
+            const idx = this.tvSubscriptions.findIndex(s => s.id == sub.id);            
             if (idx != -1) {
-                Object.assign(this.subscriptions[idx], sub);
+                Object.assign(this.tvSubscriptions[idx], sub);
             } else {                          
-                this.subscriptions.push(sub);
+                this.tvSubscriptions.push(sub);
             }           
         }
-        this.subscriptions.forEach((sub,idx) => {
+        this.tvSubscriptions.forEach((sub,idx) => {
             if (subs.findIndex(x => x.id == sub.id) == -1) {
-                this.subscriptions.splice(idx, 1);
+                this.tvSubscriptions.splice(idx, 1);
             }
         })
-        return this.subscriptions;
+        return this.tvSubscriptions;
+    }
+
+    async getMovieSubscriptions(): Promise<MovieSubscription[]> {
+        const subs = await this.movieSubRepo.find();
+        for (let i in subs) {
+            const sub = subs[i];
+            const idx = this.movieSubscriptions.findIndex(s => s.id == sub.id);            
+            if (idx != -1) {
+                Object.assign(this.movieSubscriptions[idx], sub);
+            } else {                          
+                this.movieSubscriptions.push(sub);
+            }           
+        }
+        this.movieSubscriptions.forEach((sub,idx) => {
+            if (subs.findIndex(x => x.id == sub.id) == -1) {
+                this.movieSubscriptions.splice(idx, 1);
+            }
+        })
+        return this.movieSubscriptions;
     }
 
     async updateEpisodes(sub: TvSubscription, save: boolean = true) {
@@ -96,18 +132,77 @@ export class SubscriptionsService extends LogMe{
         }
             
     }
-    async checkSubscriptions() {
-        await this.getSubscriptions();
-        for(let idx in this.subscriptions) {
+
+    async checkTvSubscriptions() {
+        await this.getTvSubscriptions();
+        for(let idx in this.tvSubscriptions) {
             if (idx == "0") {
-                await this.checkSingleSubscription(this.subscriptions[idx])
+                await this.checkSingleTvSubscription(this.tvSubscriptions[idx])
             } else {
-                await setTimeout(async () => await this.checkSingleSubscription(this.subscriptions[idx]) , 2000);
+                await setTimeout(async () => await this.checkSingleTvSubscription(this.tvSubscriptions[idx]) , 10000);
             }
         }
     }
 
-    async checkSingleSubscription(sub: TvSubscription) {
+    async checkMovieSubscriptions() {
+        await this.getMovieSubscriptions();
+        for(let idx in this.movieSubscriptions) {
+            if (idx == "0") {
+                await this.checkMovieSubscription(this.movieSubscriptions[idx])
+            } else {
+                await setTimeout(async () => await this.checkMovieSubscription(this.movieSubscriptions[idx]), 10000);
+            }
+        }
+    }
+
+    async checkMovieSubscription(sub: MovieSubscription) {
+        try {
+            let failed = false;
+            const response = await this.itiService.search({query:sub.name, parent: 'Movie', child: ''});
+            const itiError = response as itiError;
+            const itiLink = response as itiLink;
+            if (!itiError.error && !itiError.loggedIn) {
+                if (this.isBetterQuality(sub, itiLink.tags, itiLink.child)) {
+                    await this.jdService.addLinks(itiLink.linkid, itiLink.title);
+                }
+            } else {
+                sub.itiStatus = ItiLinkStatus.NOTFOUND;
+                failed = true;
+            }
+            if (failed) {
+                this.movieSubRepo.save(sub);
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+
+    async isBetterQuality(sub: MovieSubscription, tags: string, child: string) {
+        if (!sub.currentQuality) {
+            return true;
+        }
+        
+        if (sub.currentQuality == 'SD' && child == 'SD') {
+            return false;
+        }
+        if (sub.currentQuality == 'SD' && child == 'HD') {
+            return true;
+        }
+        let highestQuality = -1;
+        for(let i = this.qualitiesList.length - 1; i >= 0; i--) {
+            let isQuality = true;
+            this.qualitiesList[i].split(' ').forEach(x => isQuality = isQuality && tags.includes(x));
+            if (isQuality) {
+                highestQuality = i;
+            }
+        }
+        if (this.qualitiesList.indexOf(sub.currentQuality) < highestQuality) {
+            return true;
+        }
+    }
+
+    async checkSingleTvSubscription(sub: TvSubscription) {
         try {
             const missingEpisodes = sub.episodesNotInPlex.filter(e => 
                 e.itiStatus != ItiLinkStatus.NOTFOUND && e.itiStatus != ItiLinkStatus.ERROR &&
@@ -135,7 +230,7 @@ export class SubscriptionsService extends LogMe{
             console.log(e);
         }
     }
-    async removeSubscription(name?: string, season?: number, id: number = -1) {
+    async removeTvSubscription(name?: string, season?: number, id: number = -1) {
         let found;
         if (id != -1) {
             found = await this.tvSubRepo.findOne(id);
@@ -149,7 +244,7 @@ export class SubscriptionsService extends LogMe{
         return false;
     }
 
-    async addSubscription(name: string, season: number, id: number): Promise<TvSubscription> {
+    async addTvSubscription(name: string, season: number, id: number): Promise<TvSubscription> {
         
         const found = await this.tvSubRepo.findOne({name, season});
         if (found) {
@@ -164,7 +259,7 @@ export class SubscriptionsService extends LogMe{
             tvSub.season = season;
             await this.updateEpisodes(tvSub, false);
             await this.tvSubRepo.save(tvSub);
-            await this.checkSingleSubscription(tvSub);
+            await this.checkSingleTvSubscription(tvSub);
             return tvSub;
         }
         catch (e) {

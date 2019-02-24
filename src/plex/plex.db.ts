@@ -64,7 +64,11 @@ FROM
     async getMovie(name: string) {
         await this.connect();
         const query = `
-        SELECT title FROM metadata_items WHERE title LIKE '%${name}%' AND guid LIKE 'com.plexapp.agents.imdb%'
+        SELECT n.title, n.originally_available_at, m.width, m.height, m.bitrate, m.video_codec, m.audio_codec 
+        FROM metadata_items n
+        JOIN media_items m ON m.metadata_item_id = n.id
+        WHERE title LIKE '%${name}%' AND 
+        guid LIKE 'com.plexapp.agents.imdb%' 
         `;
 
         const data = await this.db.all(query);

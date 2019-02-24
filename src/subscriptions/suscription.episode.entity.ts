@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
-import { TvSubscription } from "./subscription.entity";
+import { TvSubscription } from "./tv-subscription.entity";
 
 @Entity()
 export class TvEpisode {

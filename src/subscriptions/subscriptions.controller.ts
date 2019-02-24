@@ -11,20 +11,20 @@ export class SubscriptionsController {
     constructor(private readonly subService: SubscriptionsService) {}
 
     @Roles(UserLevel.User)
-    @Get()
+    @Get('tv')
     async getSubscriptions() {
-        return await this.subService.getSubscriptions();
+        return await this.subService.getTvSubscriptions();
     }
 
     @Roles(UserLevel.User)
-    @Post()
+    @Post('tv')
     async addSubscriptions(@Body() body: any) {
-        return await this.subService.addSubscription(body.name, body.season, body.id);
+        return await this.subService.addTvSubscription(body.name, body.season, body.id);
     }
 
     @Roles(UserLevel.Admin)
-    @Delete()
+    @Delete('tv')
     async removeSubscriptions(@Body() body: any) {
-        return await this.subService.removeSubscription(body.name, body.season, body.id);
+        return await this.subService.removeTvSubscription(body.name, body.season, body.id);
     }
 }
