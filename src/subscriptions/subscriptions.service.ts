@@ -7,7 +7,7 @@ import { LogMe, Logger } from '../shared/log.service';
 import { ItiService } from '../iti/iti.service';
 import { JdService } from '../jd/jd.service';
 import { TmdbService } from '../tmdb/tmdb.service';
-import { itiLink, itiError } from '../models/iti';
+import { itiLink, itiError, itiLinkResponse } from '../models/iti';
 import PlexDb from '../plex/plex.db';
 import { TvEpisode, ItiLinkStatus } from './suscription.episode.entity';
 import { MovieSubscription } from './movie-subscription.entity';
@@ -47,7 +47,8 @@ export class SubscriptionsService extends LogMe{
    
     async setupPolling() {
         this.checkTvSubscriptions();
-        setInterval(() => this.checkTvSubscriptions(), 1000 * 60 * 60 * 6)
+        this.checkMovieSubscriptions();
+        setInterval(() => {this.checkTvSubscriptions(); this.checkMovieSubscriptions()}, 1000 * 60 * 60 * 6);
     }
 
     async getTvSubscriptions(): Promise<TvSubscription[]> {
@@ -158,12 +159,24 @@ export class SubscriptionsService extends LogMe{
     async checkMovieSubscription(sub: MovieSubscription) {
         try {
             let failed = false;
-            const response = await this.itiService.search({query:sub.name, parent: 'Movie', child: ''});
+            const response = await this.itiService.search({query:sub.name, parent: 'Movies', child: ''});
             const itiError = response as itiError;
-            const itiLink = response as itiLink;
+            const itiLinks = response as itiLinkResponse;
+            let highestQualityLink: itiLink = null;
+            let highestQuality: string = sub.currentQuality;
             if (!itiError.error && !itiError.loggedIn) {
-                if (this.isBetterQuality(sub, itiLink.tags, itiLink.child)) {
-                    await this.jdService.addLinks(itiLink.linkid, itiLink.title);
+                for (var i = 0; i < itiLinks.results.length; i++) {
+                    const itiLink = itiLinks.results[i];
+                    if (itiLink && this.isBetterQuality(highestQuality, itiLink.tags, itiLink.child)) {
+                        highestQualityLink = itiLink;
+                        highestQuality = itiLink.tags || itiLink.child;
+                    }
+                }
+                if (highestQuality != sub.currentQuality && highestQualityLink != null) {
+                    await this.jdService.addLinks(highestQualityLink.linkid, highestQualityLink.title);
+                    sub.itiStatus = ItiLinkStatus.FOUND;
+                    sub.currentQuality = highestQuality;
+                    this.movieSubRepo.save(sub);
                 }
             } else {
                 sub.itiStatus = ItiLinkStatus.NOTFOUND;
@@ -178,28 +191,36 @@ export class SubscriptionsService extends LogMe{
         }
     }
 
-    async isBetterQuality(sub: MovieSubscription, tags: string, child: string) {
-        if (!sub.currentQuality) {
+    isBetterQuality(currentQuality: string, tags: string, child: string) {
+        if (!currentQuality) {
             return true;
         }
         
-        if (sub.currentQuality == 'SD' && child == 'SD') {
+        if (currentQuality == 'SD' && child == 'SD') {
             return false;
         }
-        if (sub.currentQuality == 'SD' && child == 'HD') {
+        if (currentQuality == 'SD' && child == 'HD') {
             return true;
         }
-        let highestQuality = -1;
+        let currentQualityIndex = this.getQuality(currentQuality);
+        let highestQualityIndex = this.getQuality(tags);
+        if (highestQualityIndex !== -1 && currentQualityIndex < highestQualityIndex) {
+            return true;
+        }
+
+        return false;
+    }
+
+    getQuality(tags: string) {
         for(let i = this.qualitiesList.length - 1; i >= 0; i--) {
             let isQuality = true;
-            this.qualitiesList[i].split(' ').forEach(x => isQuality = isQuality && tags.includes(x));
+            this.qualitiesList[i].split(' ').forEach(x => isQuality = isQuality && tags.toUpperCase().includes(x));
             if (isQuality) {
-                highestQuality = i;
+                return i;
             }
         }
-        if (this.qualitiesList.indexOf(sub.currentQuality) < highestQuality) {
-            return true;
-        }
+        return -1;
+        
     }
 
     async checkSingleTvSubscription(sub: TvSubscription) {
