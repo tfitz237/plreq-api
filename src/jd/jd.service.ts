@@ -307,7 +307,7 @@ export class JdService extends LogMe {
             try {
                 const linksString = links.join(' ');
                 resp = await jdApi.addLinks(linksString, this.deviceId, packageName);
-                await this.logInfo(this.addLinks, `Added ${links.length} linsk under the name ${packageName}`);
+                await this.logInfo(this.addLinks, `Added ${links.length} links under the name ${packageName}`);
                 return { success: true};
             } catch (e) {
                 await this.logError(this.addLinks, `Error adding links`, e.error);
