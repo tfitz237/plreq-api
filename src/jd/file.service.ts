@@ -35,19 +35,19 @@ export default class FileService {
         return new Promise<boolean>((res, rej) => {
             const result = spawn(
                 'bash', 
-                ['unrar.sh', directoryName], 
+                ['/media/strong/User/Projects/plreq-api/unrar.sh', directoryName], 
                 {
                     cwd: '/media/large/User/Downloads'
                 }
                 );
-                result.stdout.on('data', data => {
-                    if (data.includes('Success')) {
-                        res(true);
-                    } else {
-                        res(false);
-                    }
-                });
-                result.stderr.on('data', data => res(false));
+            let resultString = '';
+            result.stdout.on('data', data => resultString += data.toString());
+            result.stderr.on('data', data => resultString += data.toString());
+
+            result.on('close', () => {
+                console.log(resultString);
+                res(resultString.includes('Success'))
+            });
         });
     }
 
