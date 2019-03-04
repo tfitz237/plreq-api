@@ -33,21 +33,27 @@ export default class FileService {
 
     async unrar(directoryName: string): Promise<boolean> {
         return new Promise<boolean>((res, rej) => {
-            const result = spawn(
-                'bash', 
-                ['/media/strong/User/Projects/plreq-api/unrar.sh', directoryName], 
-                {
-                    cwd: '/media/large/User/Downloads'
-                }
-                );
-            let resultString = '';
-            result.stdout.on('data', data => resultString += data.toString());
-            result.stderr.on('data', data => resultString += data.toString());
+            try {
+                const result = spawn(
+                    'bash', 
+                    ['/media/strong/User/Projects/plreq-api/unrar.sh', directoryName], 
+                    {
+                        cwd: '/media/large/User/Downloads'
+                    }
+                    );
+                let resultString = '';
+                result.stdout.on('data', data => resultString += data.toString());
+                result.stderr.on('data', data => resultString += data.toString());
 
-            result.on('close', () => {
-                console.log(resultString);
-                res(resultString.includes('Success'))
-            });
+                result.on('close', () => {
+                    console.log(resultString);
+                    res(resultString.includes('Success'))
+                });
+            }
+            catch (e) {
+                console.log(e);
+                res(false);
+            }
         });
     }
 
