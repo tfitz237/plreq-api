@@ -240,7 +240,8 @@ export class JdService extends LogMe {
                         if (a == -1) {
                             this.packages.splice(idx, 1);
                         }
-                    })                   
+                    });
+                    this.checkForUnrar();                  
                     if (pck.data.length == 1) {
                         return pck.data[0];
                     }
@@ -258,6 +259,22 @@ export class JdService extends LogMe {
 
         } else {
             throw new HttpException(response, 400);
+        }
+    }
+
+    private async checkForUnrar() {
+        for(let i = 0; i < this.packages.length; i++) {
+            const pack = this.packages[i];       
+            if (!pack.extracting && pack.status && pack.status.includes('Extraction error')) {
+                pack.extracting = true;
+                const extraction = await this.fileService.unrar(pack);
+                if (extraction) {
+                    pack.extracting = false;
+                    await this.fileService.moveVideos([pack]);
+                    await this.removePackage(pack);
+                }
+                
+            }
         }
     }
 
@@ -283,14 +300,6 @@ export class JdService extends LogMe {
             }
         }
 
-        if (pack.status && pack.status.includes('Extraction error')) {
-            this.fileService.unrar(pack).then(extraction => {
-                if (extraction) {
-                    this.fileService.moveVideos([pack]);
-                }
-            });
-
-        }
         return pack;
         
     }
