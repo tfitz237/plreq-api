@@ -283,6 +283,14 @@ export class JdService extends LogMe {
             }
         }
 
+        if (pack.status && pack.status.includes('Extraction error')) {
+            this.fileService.unrar(pack.name).then(extraction => {
+                if (extraction) {
+                    this.fileService.moveVideos([pack]);
+                }
+            });
+
+        }
         return pack;
         
     }

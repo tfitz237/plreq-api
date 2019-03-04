@@ -6,6 +6,9 @@ import Configuration from '../shared/configuration';
 import * as rimraf from 'rimraf';
 import { WsGateway } from '../ws/ws.gateway';
 import { jdPackage } from '../models/jdownloader';
+
+import {spawn} from 'child_process';
+
 @Injectable()
 export default class FileService {
     dir: string;
@@ -27,6 +30,26 @@ export default class FileService {
         this.socket = socket;
     }
     
+
+    async unrar(directoryName: string): Promise<boolean> {
+        return new Promise<boolean>((res, rej) => {
+            const result = spawn(
+                'bash', 
+                ['unrar.sh', directoryName], 
+                {
+                    cwd: '/media/large/User/Downloads'
+                }
+                );
+                result.stdout.on('data', data => {
+                    if (data.includes('Success')) {
+                        res(true);
+                    } else {
+                        res(false);
+                    }
+                });
+                result.stderr.on('data', data => res(false));
+        });
+    }
 
     async moveVideos(packages: jdPackage[] = []): Promise<[boolean, jdPackage[]]> {  
         packages = this.findVideos(packages);
