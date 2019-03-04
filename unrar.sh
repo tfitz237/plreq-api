@@ -2,11 +2,10 @@ declare -a passwords=("soitgoes" "luelinks" "intotheinternet")
 
 output=""
 result="Failure"
-dir="/media/large/User/Downloads/${1}"
 for password in ${passwords[*]}; do
-    file=$(find $dir -name '*.rar' | head -1)
+    file=$(find "/media/large/User/Downloads/${1}" -name '*.rar' | head -1)
     echo "Extracting $file"
-    cd $dir
+    cd $(dirname "$file")
     output=$(unrar x -p$password $(printf %q $file))
     if [[ $output =~ .*"All OK" ]]
     then

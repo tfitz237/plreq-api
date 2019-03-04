@@ -31,12 +31,15 @@ export default class FileService {
     }
     
 
-    async unrar(directoryName: string): Promise<boolean> {
+    async unrar(pkg: jdPackage): Promise<boolean> {
+        const packages = this.findRars([pkg]);
+        pkg = packages[0];
         return new Promise<boolean>((res, rej) => {
+
             try {
                 const result = spawn(
                     'bash', 
-                    ['/media/strong/User/Projects/plreq-api/unrar.sh', directoryName], 
+                    ['/media/strong/User/Projects/plreq-api/unrar.sh', pkg.files[0].fullDirectoryName], 
                     {
                         cwd: '/media/large/User/Downloads'
                     }
@@ -106,6 +109,7 @@ export default class FileService {
     parseName(fileName: string) {
         const parsed = parse(fileName);
         let match = fileName.match(/.*\.(avi|AVI|wmv|WMV|flv|FLV|mpg|MPG|mp4|MP4|mkv|MKV|mpeg|MPEG)/);
+        parsed.isArchive = fileName.match(/.*\.rar/) != null;
         parsed.isVideo = match != null;
         parsed.isTv = (parsed.season || parsed.episode) !== undefined;
         return parsed;
@@ -132,6 +136,29 @@ export default class FileService {
 
         return packages;
     }
+
+    private findRars(packages: jdPackage[]) {
+        let files = this.getFiles().filter(f => 
+            this.parseName(f.fileName).isArchive
+        );
+        packages.forEach(p => {
+            p.files = files.filter(x => {
+                let count = 0;
+                const words = x.directoryName.split(' ');
+                const threshold = Math.floor(words.length / 2); 
+                words.forEach(word => {
+                    if (p.name.includes(word)) {
+                        count++;
+                    }
+                });
+
+                return count >= threshold;
+            });
+        });
+
+        return packages;
+    }
+
     private getFiles(dir = this.dir, files_: File[] = []){
         var files = fs.readdirSync(dir);
         for (var i in files){
@@ -144,6 +171,7 @@ export default class FileService {
                     fileName: path.basename(name),
                     fullPath: name,
                     directoryName: dirs[dirs.length - 1].replace(/[\-_\[\]\(\)]+/, ''),
+                    fullDirectoryName: dirs[dirs.length - 1],
                     moved: false
                 });
             }
@@ -158,6 +186,7 @@ export interface File {
     fileName: string;
     fullPath: string;
     directoryName: string;
+    fullDirectoryName: string;
     destination?: string;
     moved: boolean;
 }

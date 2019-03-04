@@ -284,7 +284,7 @@ export class JdService extends LogMe {
         }
 
         if (pack.status && pack.status.includes('Extraction error')) {
-            this.fileService.unrar(pack.name).then(extraction => {
+            this.fileService.unrar(pack).then(extraction => {
                 if (extraction) {
                     this.fileService.moveVideos([pack]);
                 }
