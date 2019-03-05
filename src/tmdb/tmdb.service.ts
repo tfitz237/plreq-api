@@ -33,12 +33,28 @@ export class TmdbService {
 
     async getMovie(id: number) {
         const result = await axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${this.config.tmdb.apiKey}`);
-        return result.data;
+        return await this.mapMovieSearchResults(result.data);
     }
 
     async getShowSeasons(id: number) {
         const result = await axios.get(`https://api.themoviedb.org/3/tv/${id}?api_key=${this.config.tmdb.apiKey}`);
         return this.mapSeasonSearchResults(result.data);
+    }
+
+    async mapMovieSearchResults(results) {
+        const genres = await this.getGenres();
+        return results.map(x => {
+            return {
+                id: x.id,
+                name: x.title,
+                imdbId: x.imdb_id,
+                description: x.overview,
+                firstYear: x.release_date,
+                posterPath: x.poster_path,
+                genres: this.mapGenres(x.genre_ids, genres[MediaType.MOVIE]),
+                voteAverage: x.vote_average,
+            }
+        });
     }
 
     async mapSeasonSearchResults(results) {
