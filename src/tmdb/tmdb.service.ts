@@ -51,7 +51,7 @@ export class TmdbService {
                 description: x.overview,
                 firstYear: x.release_date,
                 posterPath: x.poster_path,
-                genres: this.mapGenres(x.genre_ids, genres[MediaType.MOVIE]),
+                genres: x.genres,
                 voteAverage: x.vote_average,
             }
         });
