@@ -33,7 +33,7 @@ export class TmdbService {
 
     async getMovie(id: number) {
         const result = await axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${this.config.tmdb.apiKey}`);
-        return await this.mapMovieSearchResults([result.data])[0];
+        return result.data;
     }
 
     async getShowSeasons(id: number) {
@@ -41,7 +41,7 @@ export class TmdbService {
         return this.mapSeasonSearchResults(result.data);
     }
 
-    async mapMovieSearchResults(results) {
+    async mapMovieSearchResults(results, single: boolean = false) {
         const genres = await this.getGenres();
         return results.map(x => {
             return {
@@ -50,8 +50,8 @@ export class TmdbService {
                 imdbId: x.imdb_id,
                 description: x.overview,
                 firstYear: x.release_date,
-                posterPath: x.poster_path,
-                genres: x.genres,
+                posterPath:'http://image.tmdb.org/t/p/w500' + x.poster_path,
+                genres: single ? x.genres : this.mapGenres(x.genre_ids, genres[MediaType.MOVIE]),
                 voteAverage: x.vote_average,
             }
         });

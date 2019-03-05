@@ -18,7 +18,7 @@ export class MovieSubscription {
     @Column()
     currentQuality: string;
 
-    @Column()
+    @Column({nullable:true})
     highestQuality: string;
 
     @Column()
