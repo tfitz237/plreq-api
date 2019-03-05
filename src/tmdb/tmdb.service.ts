@@ -28,12 +28,12 @@ export class TmdbService {
 
     async searchForMovie(name: string) {
         const result = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${this.config.tmdb.apiKey}&query=${name}`);
-        return result.data.results;
+        return await this.mapMovieSearchResults(result.data.results);
     }
 
     async getMovie(id: number) {
         const result = await axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${this.config.tmdb.apiKey}`);
-        return await this.mapMovieSearchResults(result.data);
+        return await this.mapMovieSearchResults([result.data])[0];
     }
 
     async getShowSeasons(id: number) {
