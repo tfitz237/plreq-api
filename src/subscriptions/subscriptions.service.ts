@@ -289,4 +289,42 @@ export class SubscriptionsService extends LogMe{
         }
     }
 
+    async removeMovieSubscription(name?: string,  id: number = -1) {
+        let found;
+        if (id != -1) {
+            found = await this.movieSubRepo.findOne(id);
+        } else {
+            found = await this.movieSubRepo.findOne({name});
+        }
+        if (found) {
+            await this.movieSubRepo.remove(found);
+            return true;
+        }
+        return false;
+    }
+
+    async addMovieSubscription(name: string, highestQuality: string, id: number): Promise<MovieSubscription> {
+        
+        const found = await this.movieSubRepo.findOne({name});
+        if (found) {
+            return null;
+        }
+        try {
+            const movieSubRepo = new MovieSubscription();
+            movieSubRepo.created = Date.now();
+            const data = await this.tmdbService.getMovie(id);
+            movieSubRepo.tmdbId = id;
+            movieSubRepo.name = data.title;
+            movieSubRepo.airDate = data.release_data;
+            movieSubRepo.highestQuality = highestQuality;
+            await this.movieSubRepo.save(movieSubRepo);
+            await this.checkMovieSubscription(movieSubRepo);
+            return movieSubRepo;
+        }
+        catch (e) {
+            console.log(e);
+            return null;
+        }
+    }
+
 }

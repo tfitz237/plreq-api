@@ -19,6 +19,9 @@ export class MovieSubscription {
     currentQuality: string;
 
     @Column()
+    highestQuality: string;
+
+    @Column()
     tmdbId: number;
 
     @Column()
