@@ -23,6 +23,7 @@ export class Logger {
         logEntry.message = message,
         logEntry.exception = exception;
         logEntry.logger = `${logger}.${entrance}()`;
+        console.log(JSON.stringify(logEntry));
         await this.logger.save(logEntry)
     }
 

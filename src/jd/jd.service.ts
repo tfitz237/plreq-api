@@ -279,29 +279,34 @@ export class JdService extends LogMe {
         }
     }
 
-    private addPackageDetails(pack: jdPackage) {        
-        pack.progressPercent = Math.round(pack.bytesLoaded / pack.bytesTotal * 10000) / 100;
-        pack.speedInMb = Math.round(pack.speed / 10000) / 100;
-        var fullSeconds = (pack.bytesTotal - pack.bytesLoaded) / pack.speed;
-        var minutes = fullSeconds / 60;
-        var seconds = Math.floor(minutes) - Math.round(Math.floor(minutes) * 100) / 100 / 60;
-        pack.progress = {
-            percent: pack.progressPercent + '%',
-            eta: Math.floor(minutes) + 'm' + Math.floor(seconds) + 's',
-            speedInMb: isNaN(pack.speedInMb) ? '0' : pack.speedInMb + 'mb/s'
-        };
+    private addPackageDetails(pack: jdPackage) {      
+        try {  
+            pack.progressPercent = Math.round(pack.bytesLoaded / pack.bytesTotal * 10000) / 100;
+            pack.speedInMb = Math.round(pack.speed / 10000) / 100;
+            var fullSeconds = (pack.bytesTotal - pack.bytesLoaded) / (pack.speed || 1);
+            var minutes = fullSeconds / 60;
+            var seconds = Math.floor(minutes) - Math.round(Math.floor(minutes) * 100) / 100 / 60;
+            pack.progress = {
+                percent: pack.progressPercent + '%',
+                eta: Math.floor(minutes) + 'm' + Math.floor(seconds) + 's',
+                speedInMb: isNaN(pack.speedInMb) ? '0' : pack.speedInMb + 'mb/s'
+            };
 
-        if (pack.status && pack.status.includes('Extracting')) {
-            pack.extracting = true;
-            const match = pack.status.match(/Extracting \(ETA: ((\d+)?m?:?(\d+)s)\).*/);
-            if (match) {
-                pack.progress.extraction = match[1];
-                const seconds = parseInt(match[2]) * 60 + parseInt(match[3]);            
-                pack.extractionProgress = seconds;
+            if (pack.status && pack.status.includes('Extracting')) {
+                pack.extracting = true;
+                const match = pack.status.match(/Extracting \(ETA: ((\d+)?m?:?(\d+)s)\).*/);
+                if (match) {
+                    pack.progress.extraction = match[1];
+                    const seconds = parseInt(match[2]) * 60 + parseInt(match[3]);            
+                    pack.extractionProgress = seconds;
+                }
             }
-        }
 
-        return pack;
+            return pack;
+        }
+        catch (e) {
+            this.logError(this.addPackageDetails, "error adding package details", e);
+        }
         
     }
 
