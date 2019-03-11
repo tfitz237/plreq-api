@@ -7,6 +7,7 @@ import { WsGateway } from '../ws/ws.gateway';
 import { Logger, LogMe } from '../shared/log.service';
 import { LogLevel } from '../shared/log.entry.entity';
 import { ItiService } from '../iti/iti.service';
+import { resolve } from 'url';
 @Injectable()
 export class JdService extends LogMe {
     isConnected: boolean = false;
@@ -103,8 +104,8 @@ export class JdService extends LogMe {
     }
 
     async movePackages(): Promise<jdInit> {
-        if (this.anyPackagesFinished(true)) {
-            await this.checkForUnrar();
+        await this.checkForUnrar();
+        if (this.anyPackagesFinished(true)) {          
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
             await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x=>`${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName: 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`)}`);
@@ -264,19 +265,24 @@ export class JdService extends LogMe {
     }
 
     private async checkForUnrar() {
-        for(let i = 0; i < this.packages.length; i++) {
-            const pack = this.packages[i];       
-            if (!pack.extracting && pack.status && pack.status.includes('Extraction error')) {
-                pack.extracting = true;
-                const extraction = await this.fileService.unrar(pack);
-                if (extraction) {
-                    pack.extracting = false;
-                    await this.fileService.moveVideos([pack]);
-                    await this.removePackage(pack);
+        return new Promise<boolean>(async (resolve, reject) => {
+            for(let i = 0; i < this.packages.length; i++) {
+                const pack = this.packages[i];       
+                if (!pack.forceExtraction && pack.status && pack.status.includes('Extraction error')) {
+                    pack.forceExtraction = true;
+                    pack.status = 'Forcing Extraction...';
+                    Object.assign(this.packages[i], pack);
+                    resolve(true);
+                    const extraction = await this.fileService.unrar(pack);
+                    if (extraction) {
+                        pack.forceExtraction = false;
+                        await this.fileService.moveVideos([pack]);
+                        await this.removePackage(pack);
+                    }
+                    
                 }
-                
             }
-        }
+        });
     }
 
     private addPackageDetails(pack: jdPackage) {      
@@ -300,6 +306,9 @@ export class JdService extends LogMe {
                     const seconds = parseInt(match[2]) * 60 + parseInt(match[3]);            
                     pack.extractionProgress = seconds;
                 }
+            }
+            if (pack.forceExtraction && pack.status && pack.status.includes('Extraction Error')) {
+                pack.status = 'Forcing Extraction...';
             }
 
             return pack;

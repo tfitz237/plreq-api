@@ -28,6 +28,7 @@ export interface jdPackage {
     speed: number;
     bytesTotal: number;
     extracting?: boolean;
+    forceExtraction?: boolean;
     extractionProgress?: number;   
     progress: {
         percent: string;
