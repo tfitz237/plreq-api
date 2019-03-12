@@ -46,9 +46,11 @@ export class SubscriptionsService extends LogMe{
     }
    
     async setupPolling() {
-        this.checkTvSubscriptions();
-        this.checkMovieSubscriptions();
-        setInterval(() => {this.checkTvSubscriptions(); this.checkMovieSubscriptions()}, 1000 * 60 * 60 * 6);
+        await this.checkTvSubscriptions();
+        await this.checkMovieSubscriptions();
+        setInterval(() => {
+            this.checkTvSubscriptions().then(() => this.checkMovieSubscriptions());       
+        }, 1000 * 60 * 60 * 2);
     }
 
     async getTvSubscriptions(): Promise<TvSubscription[]> {
