@@ -37,7 +37,7 @@ export default class PlexDb {
      {
         await this.connect();
         name = name.replace(/[.*]/g, '').replace(/[^a-zA-Z0-9 :]/g, ' ');
-        const words = `title LIKE '%` + name.split(' ').join(`%' AND title LIKE '%`) + `%'`;
+        const words = `title LIKE '%` + name.split(/\s+/).join(`%' AND title LIKE '%`) + `%'`;
         const query = `
         SELECT REPLACE(SUBSTR(REPLACE(REPLACE (d.guid, REPLACE(s.showGuid, '%', ''), ''), '?lang=en',''), 2), '/', '-')
          as season_episode, 
@@ -71,7 +71,7 @@ FROM
         
         await this.connect();
         name = name.replace(/[.*]/g, '').replace(/[^a-zA-Z0-9 :]/g, ' ');
-        const words = `title LIKE '%` + name.split(' ').join(`%' AND title LIKE '%`) + `%'`;
+        const words = `title LIKE '%` + name.split(/\s+/).join(`%' AND title LIKE '%`) + `%'`;
         const query = `
         SELECT n.id, n.title, n.originally_available_at, m.width, m.height, m.bitrate, m.video_codec, m.audio_codec 
         FROM metadata_items n
