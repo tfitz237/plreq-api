@@ -104,7 +104,7 @@ export class JdService extends LogMe {
     }
 
     async movePackages(): Promise<jdInit> {
-        await this.checkForUnrar();
+        this.checkForUnrar();
         if (this.anyPackagesFinished(true)) {          
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
