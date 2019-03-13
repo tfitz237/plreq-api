@@ -201,7 +201,10 @@ export class JdService extends LogMe {
                 this.links = links.data;
                 return links.data;
             } 
-            catch {}           
+            catch (e) {
+
+                await this.logError(this.getLinks, "Could not retrieve links", e);
+            }           
         }
         return [];
     }
