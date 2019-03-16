@@ -34,7 +34,6 @@ export class AuthService {
     }
 
     async requestToken(inputUser: iUser): Promise<string> {
-        // TODO: Database integration for un/pw
         const user = await this.userRepo.findOne({ username: inputUser.username}); 
         const verified = user ? pwHash.verify(inputUser.password, user.password) : false;
         return Promise.resolve(verified ? this.jwtService.sign({ userGuid: user.userGuid, username: user.username, level: user.level }) : null);

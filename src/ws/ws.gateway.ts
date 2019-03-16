@@ -67,13 +67,13 @@ import { iUser } from '../models/user';
     }
 
     @SubscribeMessage('isInPlex')
-    async tvShowExists(client, data): Promise<boolean> {
+    async tvShowExists(client, data): Promise<any> {
       if (client.authorized) {
         if (data.type == 'TV') {
-          return await this.plexDb.tvShowExists(data.name, data.season, data.episode);
+          return await this.plexDb.getTvEpisodes(data.name, data.season, data.episode);
         }
         if (data.type == 'Movies') {
-          return await this.plexDb.movieExists(data.name);
+          return await this.plexDb.getMovie(data.name);
         }
       }
     }
