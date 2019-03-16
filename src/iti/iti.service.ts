@@ -16,34 +16,30 @@ export class ItiService extends LogMe {
         private readonly config: Configuration, private readonly logService: Logger, private readonly tmdbService: TmdbService) {
         super(logService);
     }
-    async search(query: itiQuery, retry: number = 0, results = [] ): Promise<itiLinkResponse|itiError> {
+    async search(request: itiQuery, retry: number = 0, results: itiLink[] = [] ): Promise<itiLinkResponse|itiError> {
         if (await this.ensureLoggedIn()) {
             try {
                 const result = await axios.get(`${this.config.iti.host}/ajax.php`, {
                     params: {
                         i: 'main',
-                        which: encodeURIComponent(query.query),
+                        which: request.query,
                         s: (retry * 50) + 1,
-                        p: query.parent,
-                        c: query.child
+                        p: request.parent,
+                        c: request.child
                     },
                     headers:{
                         'Cookie': this.cookie
                     }
                 });
-                if (result.data && result.data.length > 0) {
-                    const filtered = result.data.filter(link => 
-                        query.query.split(' ').every(q => 
-                            (link.parent == 'Movies' || link.parent == 'TV') 
-                                && link.title.toLowerCase().includes(q.toLowerCase())
-                        )
-                    );
+                const searchResults = results;
+                if (searchResults && searchResults.length > 0) {
+                    const filtered = searchResults.filter(link => this.filterSearchResult(link, request.query));
                     results = results.concat(filtered);
-                    if (filtered.length < result.data.length && results.length < 50) {
-                        return this.search(query, ++retry, results);
+                    if (filtered.length < searchResults.length && results.length < 50) {
+                        return this.search(request, ++retry, results);
                     }
                 }          
-                this.log(this.search, LogLevel.INFORMATION, `Query: ${query}. Found ${results.length} filtered results`);     
+                this.log(this.search, LogLevel.INFORMATION, `Query: ${request}. Found ${results.length} filtered results`);     
                 return {
                     page: retry,
                     results: results
@@ -61,8 +57,13 @@ export class ItiService extends LogMe {
         }
     }
 
+    filterSearchResult(link: itiLink, query: string) {
+        return query.split(' ').every(word => 
+            (link.parent == 'Movies' || link.parent == 'TV') 
+                && link.title.toLowerCase().includes(word.toLowerCase()));
+    }
 
-    async getLinks(linkId: string): Promise<any> {
+    async getLinks(linkId: string): Promise<string[]> {
         if (await this.ensureLoggedIn()) {
             try {
                 const result = await axios.get(this.config.iti.host, {
@@ -176,7 +177,7 @@ export class ItiService extends LogMe {
 
     findImagesInPage(html: string): string[] {
         const images = [];
-        const imagesDiv = html.match(/<div.*id=\"links_imgref\">(.*)<\/div>/);
+        const imagesDiv = html.match(/<div.*id=\"links_imgref\" data-watch-this="">(.*)<\/div>/);
         var httpRegex = "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";
         if (imagesDiv) {
             const reg = /<a href="(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))" target="_blank">(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))<\/a><br class="clear" \/>/;

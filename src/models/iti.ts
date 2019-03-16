@@ -26,6 +26,7 @@ export interface itiTvShowQuery {
     name: string;
     season?: number;
     episode?: number;
+    single?: boolean;
 }
 
 export interface itiLinkResponse {

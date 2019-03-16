@@ -26,8 +26,12 @@ export class TmdbService {
         return await this.mapTvSearchResults(result.data.results);
     }
 
-    async searchForMovie(name: string) {
+    async searchForMovie(name: string, single?: boolean) {
         const result = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${this.config.tmdb.apiKey}&query=${name}`);
+        if (single) {
+            const singleResult = await this.getMovie(result.data.results[0].id);
+            return singleResult;
+        }
         return await this.mapMovieSearchResults(result.data.results);
     }
 

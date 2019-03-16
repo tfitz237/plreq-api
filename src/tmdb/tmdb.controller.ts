@@ -25,7 +25,7 @@ export class TmdbController {
         if (request.id) {
             return await this.tmdbService.getMovie(request.id);
         }
-        return await this.tmdbService.searchForMovie(request.name);
+        return await this.tmdbService.searchForMovie(request.name, request.single);
     }
 
 }
