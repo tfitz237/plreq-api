@@ -31,7 +31,7 @@ export class ItiService extends LogMe {
                         'Cookie': this.cookie
                     }
                 });
-                const searchResults = results;
+                const searchResults = result.data;
                 if (searchResults && searchResults.length > 0) {
                     const filtered = searchResults.filter(link => this.filterSearchResult(link, request.query));
                     results = results.concat(filtered);
