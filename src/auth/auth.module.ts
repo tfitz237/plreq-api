@@ -14,7 +14,7 @@ import { User } from './auth.user.entity';
         JwtModule.register({
             secretOrPrivateKey: new Configuration().jwt.secret,
             signOptions: {
-                expiresIn: 172800,
+                expiresIn: 7776000,
             },
         }),
         SharedModule,
