@@ -11,6 +11,7 @@ import { itiLink, itiError, itiLinkResponse } from '../models/iti';
 import PlexDb from '../plex/plex.db';
 import { TvEpisode, ItiLinkStatus } from './suscription.episode.entity';
 import { MovieSubscription } from './movie-subscription.entity';
+import { resolve } from 'dns';
 @Injectable()
 export class SubscriptionsService extends LogMe{
 
@@ -74,7 +75,7 @@ export class SubscriptionsService extends LogMe{
     }
 
     async waitForEpisodes(sub) {
-        return await setTimeout(async () => await this.updateEpisodes(sub), 500);
+        return new Promise((resolve) => setTimeout(() => this.updateEpisodes(sub).then(() => resolve()), 500));
     }
 
     async getMovieSubscriptions(): Promise<MovieSubscription[]> {
