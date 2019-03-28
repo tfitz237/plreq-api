@@ -13,7 +13,7 @@ import { jdPackage } from '../models/jdownloader';
 import { guid, UserLevel, AuthService } from '../auth/auth.service';
 import PlexDb from '../plex/plex.db';
 import { iUser } from '../models/user';
-import axios from '../tmdb/tmdb.api';
+import axios from 'axios';
 
 @WebSocketGateway()
 export class WsGateway implements OnGatewayInit, OnGatewayConnection {
