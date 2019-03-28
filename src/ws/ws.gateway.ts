@@ -92,7 +92,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   async requestImage(link: string) {
-    const response = await axios.get(link);
+    const response = await axios.get(link, {responseType: 'arraybuffer' });
     const data = "data:" + response.headers["content-type"] + ";base64," + new Buffer(response.data).toString('base64');
     return data;
   } 
