@@ -231,6 +231,7 @@ export class SubscriptionsService extends LogMe{
 
     async checkSingleTvSubscription(sub: TvSubscription) {
         try {
+            sub.episodes = sub.episodes && sub.episodes.length >= 0 ? sub.episodes : [];
             const missingEpisodes = sub.episodesNotInPlex.filter(e => 
                 e.itiStatus != ItiLinkStatus.NOTFOUND && e.itiStatus != ItiLinkStatus.ERROR &&
                 Date.parse(e.airDate) < Date.now());
