@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import axios from '../tmdb/tmdb.api';
+import axios from 'axios';
 import Configuration from '../shared/configuration';
 import { Logger, LogMe } from '../shared/log.service';
 import { LogLevel } from '../shared/log.entry.entity';

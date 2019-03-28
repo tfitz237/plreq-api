@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import axios from './tmdb.api';
+import axios from 'axios';
 import Configuration from '../shared/configuration';
 import { tmdbEpisode } from '../models/tmdb';
 

@@ -57,7 +57,7 @@ export class SubscriptionsService extends LogMe{
         const subs = await this.tvSubRepo.find();
         for (let i in subs) {
             const sub = subs[i];
-            await this.updateEpisodes(sub);
+            await setTimeout(async () => this.updateEpisodes(sub), 250);
             const idx = this.tvSubscriptions.findIndex(s => s.id == sub.id);            
             if (idx != -1) {
                 Object.assign(this.tvSubscriptions[idx], sub);
