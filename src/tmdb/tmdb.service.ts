@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
+import axios from './tmdb.api';
 import Configuration from '../shared/configuration';
 import { tmdbEpisode } from '../models/tmdb';
+
+
 
 @Injectable()
 export class TmdbService {
     private genres: any;
-
     constructor(private readonly config: Configuration) {
-
     }     
+
+
+
     async getSeason(name: string, season: number, id?: number): Promise<{showId: number, episodes:tmdbEpisode[]}> {
         if (!id) {
             id = await this.getShowId(name);

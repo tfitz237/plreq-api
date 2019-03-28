@@ -28,6 +28,7 @@
     "@nestjs/typeorm": "^5.2.2",
     "@nestjs/websockets": "^5.3.14",
     "axios": "^0.18.0",
+    "cwait": "^1.1.2",
     "fs-extra": "^7.0.0",
     "helmet": "^3.13.0",
     "imdb-api": "^4.0.2",
