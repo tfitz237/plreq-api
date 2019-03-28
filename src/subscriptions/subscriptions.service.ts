@@ -11,7 +11,10 @@ import { itiLink, itiError, itiLinkResponse } from '../models/iti';
 import PlexDb from '../plex/plex.db';
 import { TvEpisode, ItiLinkStatus } from './suscription.episode.entity';
 import { MovieSubscription } from './movie-subscription.entity';
-import { resolve } from 'dns';
+
+const delay = (duration) =>
+  new Promise(resolve => setTimeout(resolve, duration));
+
 @Injectable()
 export class SubscriptionsService extends LogMe{
 
@@ -58,7 +61,8 @@ export class SubscriptionsService extends LogMe{
         const subs = await this.tvSubRepo.find();
         for (let i in subs) {
             const sub = subs[i];
-            await this.waitForEpisodes(sub);
+            await delay(500);
+            await this.updateEpisodes(sub);
             const idx = this.tvSubscriptions.findIndex(s => s.id == sub.id);            
             if (idx != -1) {
                 Object.assign(this.tvSubscriptions[idx], sub);
@@ -72,10 +76,6 @@ export class SubscriptionsService extends LogMe{
             }
         })
         return this.tvSubscriptions;
-    }
-
-    async waitForEpisodes(sub) {
-        return new Promise((resolve) => setTimeout(() => this.updateEpisodes(sub).then(() => resolve()), 500));
     }
 
     async getMovieSubscriptions(): Promise<MovieSubscription[]> {
