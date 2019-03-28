@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const MAX_REQUESTS_COUNT = 10;
+const MAX_REQUESTS_COUNT = 40;
 const INTERVAL_MS = 10000;
 let PENDING_REQUESTS = 0;
 const api = axios.create({});
