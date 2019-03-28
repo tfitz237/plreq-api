@@ -25,4 +25,4 @@ api.interceptors.response.use(function (response) {
   return Promise.reject(error);
 });
 
-export default api
+export default api;
