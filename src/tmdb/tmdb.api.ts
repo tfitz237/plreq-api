@@ -1,19 +1,24 @@
 import axios from 'axios';
 
-const MAX_REQUESTS_COUNT = 5;
-const INTERVAL_MS = 250;
+const MAX_REQUESTS_COUNT = 10;
+const INTERVAL_MS = 1000;
 let PENDING_REQUESTS = 0;
 const api = axios.create({});
 
 api.interceptors.request.use(function (config) {
   return new Promise((resolve, reject) => {
-    let interval = setInterval(() => {
-      if (PENDING_REQUESTS < MAX_REQUESTS_COUNT) {
-        PENDING_REQUESTS++;
-        clearInterval(interval);
-        resolve(config);
-      } 
-    }, INTERVAL_MS);
+    if (PENDING_REQUESTS < MAX_REQUESTS_COUNT) {
+      PENDING_REQUESTS++;
+      resolve(config);
+    } else {
+      let interval = setInterval(() => {
+        if (PENDING_REQUESTS < MAX_REQUESTS_COUNT) {
+          PENDING_REQUESTS++;
+          clearInterval(interval);
+          resolve(config);
+        } 
+      }, INTERVAL_MS);
+    }
   });
 });
 
