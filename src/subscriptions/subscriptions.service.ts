@@ -47,10 +47,10 @@ export class SubscriptionsService extends LogMe{
     }
    
     async setupPolling() {
-        await this.checkTvSubscriptions(false);
+        await this.checkTvSubscriptions();
         await this.checkMovieSubscriptions();
         setInterval(() => {
-            this.checkTvSubscriptions(false).then(() => this.checkMovieSubscriptions());       
+            this.checkTvSubscriptions().then(() => this.checkMovieSubscriptions());       
         }, 1000 * 60 * 60 * 2);
     }
 
@@ -144,7 +144,7 @@ export class SubscriptionsService extends LogMe{
     }
 
     async checkTvSubscriptions() {
-        await this.getTvSubscriptions();
+        await this.getTvSubscriptions(false);
         for(let idx in this.tvSubscriptions) {
             if (idx == "0") {
                 await this.checkSingleTvSubscription(this.tvSubscriptions[idx])
