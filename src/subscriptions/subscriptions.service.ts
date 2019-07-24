@@ -12,9 +12,6 @@ import PlexDb from '../plex/plex.db';
 import { TvEpisode, ItiLinkStatus } from './suscription.episode.entity';
 import { MovieSubscription } from './movie-subscription.entity';
 
-const delay = (duration) =>
-  new Promise(resolve => setTimeout(resolve, duration));
-
 @Injectable()
 export class SubscriptionsService extends LogMe{
 
@@ -50,19 +47,18 @@ export class SubscriptionsService extends LogMe{
     }
    
     async setupPolling() {
-        await this.checkTvSubscriptions();
+        await this.checkTvSubscriptions(false);
         await this.checkMovieSubscriptions();
         setInterval(() => {
-            this.checkTvSubscriptions().then(() => this.checkMovieSubscriptions());       
+            this.checkTvSubscriptions(false).then(() => this.checkMovieSubscriptions());       
         }, 1000 * 60 * 60 * 2);
     }
 
-    async getTvSubscriptions(): Promise<TvSubscription[]> {
+    async getTvSubscriptions(skipTmdb = true): Promise<TvSubscription[]> {
         const subs = await this.tvSubRepo.find();
         for (let i in subs) {
             const sub = subs[i];
-            await delay(500);
-            await this.updateEpisodes(sub);
+            await this.updateEpisodes(sub, true, skipTmdb);
             const idx = this.tvSubscriptions.findIndex(s => s.id == sub.id);            
             if (idx != -1) {
                 Object.assign(this.tvSubscriptions[idx], sub);
@@ -76,6 +72,11 @@ export class SubscriptionsService extends LogMe{
             }
         })
         return this.tvSubscriptions;
+    }
+
+    async getTvSubscription(id: number) {
+        const sub = await this.tvSubRepo.findOne(id);
+        
     }
 
     async getMovieSubscriptions(): Promise<MovieSubscription[]> {
@@ -97,10 +98,11 @@ export class SubscriptionsService extends LogMe{
         return this.movieSubscriptions;
     }
 
-    async updateEpisodes(sub: TvSubscription, save: boolean = true) {
+    async updateEpisodes(sub: TvSubscription, save: boolean = true, skipTmdb = false) {
         sub.episodes = sub.episodes && sub.episodes.length >= 0 ? sub.episodes : [];
-        const eps = await this.tmdbService.getSeason(sub.name, sub.season, sub.tmdbId);
-        const allEpisodes = eps.episodes;
+
+        const eps = skipTmdb ? { episodes: null } : await this.tmdbService.getSeason(sub.name, sub.season, sub.tmdbId);
+        const allEpisodes = eps.episodes || [];
 
         const episodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
         if (sub.episodesInPlex && sub.episodesInPlex.length != episodes.length) {
@@ -119,7 +121,7 @@ export class SubscriptionsService extends LogMe{
                 }
             })
         }
-        if (allEpisodes.length != sub.numberOfEpisodes) {
+        if (allEpisodes.length != sub.numberOfEpisodes && !skipTmdb) {
             const missingEpisodes = allEpisodes.filter(x => sub.episodeNumbers.indexOf(x.episode_number) == -1);
             missingEpisodes.forEach(e => {
                 const found = sub.episodesNotInPlex.find(ep => ep.episode == e.episode_number && (ep.itiStatus != ItiLinkStatus.ERROR && ep.itiStatus != ItiLinkStatus.NOTFOUND));

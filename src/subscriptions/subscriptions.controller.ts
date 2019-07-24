@@ -12,8 +12,14 @@ export class SubscriptionsController {
 
     @Roles(UserLevel.User)
     @Get('tv')
-    async getSubscriptions() {
+    async getTvSubscriptions() {
         return await this.subService.getTvSubscriptions();
+    }
+
+    @Roles(UserLevel.User)
+    @Get('tv')
+    async getTvSubscription(@Body() body: any) {
+        return await this.subService.getTvSubscription(body.id);
     }
 
     @Roles(UserLevel.User)

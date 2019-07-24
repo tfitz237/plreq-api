@@ -123,13 +123,13 @@ export class ItiService extends LogMe {
                 parent: "TV",
                 child: ""
             }
-            const results = await this.search(query) as itiLinkResponse;
-            if (results.results.length > 0) {
-                const hdResult = results.results.find(l => l.child == "HD");
+            const res = await this.search(query) as itiLinkResponse;
+            if (res && res.results && res.results.length > 0) {
+                const hdResult = res.results.find(l => l.child == "HD");
                 if (hdResult) {
                     rtn = hdResult;
                 } else {
-                    rtn = results.results[0];
+                    rtn = res.results[0];
                 }
             }
             if (rtn && rtn.child == "HD") {
