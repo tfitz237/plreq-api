@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Post, Body, Delete } from '@nestjs/common';
+import { Controller, Get, UseGuards, Post, Body, Delete, Param } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { RolesGuard, Roles } from '../auth/auth.roles';
 import { UserLevel } from '../auth/auth.service';
@@ -17,9 +17,9 @@ export class SubscriptionsController {
     }
 
     @Roles(UserLevel.User)
-    @Get('tv')
-    async getTvSubscription(@Body() body: any) {
-        return await this.subService.getTvSubscription(body.id);
+    @Get('tv/:id')
+    async getTvSubscription(@Param('id') id: any) {
+        return await this.subService.getTvSubscription(id);
     }
 
     @Roles(UserLevel.User)
