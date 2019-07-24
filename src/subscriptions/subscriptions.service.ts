@@ -105,7 +105,7 @@ export class SubscriptionsService extends LogMe{
         sub.episodes = sub.episodes && sub.episodes.length >= 0 ? sub.episodes : [];
 
         const eps = skipTmdb ? { episodes: [] } : await this.tmdbService.getSeason(sub.name, sub.season, sub.tmdbId);
-        const allEpisodes = eps.episodes;
+        const allEpisodes = eps.episodes || [];
 
         const episodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
         if (sub.episodesInPlex && sub.episodesInPlex.length != episodes.length) {
