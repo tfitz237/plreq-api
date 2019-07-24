@@ -99,10 +99,13 @@ export class SubscriptionsService extends LogMe{
     }
 
     async updateEpisodes(sub: TvSubscription, save: boolean = true, skipTmdb = false) {
+        if (!sub.name) {
+            return;
+        }
         sub.episodes = sub.episodes && sub.episodes.length >= 0 ? sub.episodes : [];
 
-        const eps = skipTmdb ? { episodes: null } : await this.tmdbService.getSeason(sub.name, sub.season, sub.tmdbId);
-        const allEpisodes = eps.episodes || [];
+        const eps = skipTmdb ? { episodes: [] } : await this.tmdbService.getSeason(sub.name, sub.season, sub.tmdbId);
+        const allEpisodes = eps.episodes;
 
         const episodes = await this.plexDb.getEpisodeList(sub.name, sub.season);
         if (sub.episodesInPlex && sub.episodesInPlex.length != episodes.length) {
@@ -288,7 +291,7 @@ export class SubscriptionsService extends LogMe{
             tvSub.tmdbId = data.showId;
             tvSub.name = name;
             tvSub.season = season;
-            await this.updateEpisodes(tvSub, false);
+            await this.updateEpisodes(tvSub, false, true);
             await this.tvSubRepo.save(tvSub);
             await this.checkSingleTvSubscription(tvSub);
             return tvSub;
