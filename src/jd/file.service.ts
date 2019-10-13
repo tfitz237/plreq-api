@@ -83,7 +83,7 @@ export default class FileService {
                         packages[j].files[i].destination = dest;
                         
                         if (!file.moved) {
-                            await fs.move(file.fullPath, dest);
+                            await fs.move(file.fullPath, dest, { overwrite: true});
                             packages[j].files[i].moved = true;
                             console.log(`moved ${file.fileName} to ${dest}`);
                         }
