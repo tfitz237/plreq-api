@@ -22,7 +22,8 @@ export class ItiService extends LogMe {
     async search(request: ItiQuery, retry: number = 0, results: ItiLink[] = [] ): Promise<ItiLinkResponse|ItiError> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(`${(await this.config()).iti.host}/ajax.php`, {
+                const config = await this.config();
+                const result = await axios.get(`${config.iti.host}/ajax.php`, {
                     params: {
                         i: 'main',
                         which: request.query,
@@ -69,7 +70,8 @@ export class ItiService extends LogMe {
     async getLinks(linkId: string): Promise<string[]> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get((await this.config()).iti.host, {
+                const config = await this.config();
+                const result = await axios.get(config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
@@ -89,7 +91,8 @@ export class ItiService extends LogMe {
     async getImageRef(linkId: string): Promise<string[]> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get((await this.config()).iti.host, {
+                const config = await this.config();
+                const result = await axios.get(config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
@@ -208,11 +211,12 @@ export class ItiService extends LogMe {
 
     private async loginStatus(): Promise<boolean> {
         try {
+            const config = await this.config();
             const headers: any = {};
             if (this.cookie) {
                 headers.Cookie = this.cookie;
             }
-            const result = await axios.get(`${(await this.config()).iti.host}`, { headers });
+            const result = await axios.get(`${config.iti.host}`, { headers });
             if (result.headers['set-cookie']) {
                 this.cookie = result.headers['set-cookie'][0];
             }
@@ -225,8 +229,9 @@ export class ItiService extends LogMe {
     }
 
     private async login(retry: boolean = false): Promise<boolean> {
+        const config = await this.config();
         try {
-            const result = await axios.post((await this.config()).iti.host, `user=${(await this.config()).iti.user}&pass=${(await this.config()).iti.pass}`, {
+            const result = await axios.post(config.iti.host, `user=${config.iti.user}&pass=${config.iti.pass}`, {
                 params: {
                     i: 'redirect',
                 },

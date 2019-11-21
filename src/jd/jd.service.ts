@@ -27,12 +27,15 @@ export class JdService extends LogMe {
     }
 
     get isInitiated(): boolean { return this.isConnected && !!this.deviceId; }
+
     async config() {
         return await this.configService.getConfig();
     }
+
     async connect(): Promise<JdConnectResponse> {
         try {
-            const response = await jdApi.connect((await this.config()).jd.email,(await this.config()).jd.password);
+            const config = await this.config();
+            const response = await jdApi.connect(config.jd.email,config.jd.password);
             if (response === true) {
                 this.isConnected = true;
                 return {

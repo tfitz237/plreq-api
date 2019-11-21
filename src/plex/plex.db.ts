@@ -22,7 +22,8 @@ export default class PlexDb {
     }
 
     async connect() {
-        this.db = await sqlliteOpen(path.join((await this.config()).plex.dbLocation, 'com.plexapp.plugins.library.db'), {verbose: true});
+        const config = await this.config();
+        this.db = await sqlliteOpen(path.join(config.plex.dbLocation, 'com.plexapp.plugins.library.db'), {verbose: true});
     }
 
     async tvShowExists(name: string, season: number = -1, episode: number = -1): Promise<boolean> {

@@ -1,10 +1,10 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
-	"name": "Node:LTS + Typescript",
+	"name": "Node:LTS&TS + @nest/cli",
 	"dockerFile": "Dockerfile",
 
 	// Uncomment the next line if you want to publish any ports.
-	// "appPort": [],
+	"appPort": [32465],
 
 	// Uncomment the next line if you want to add in default container specific settings.json values
 	// "settings":  { "workbench.colorTheme": "Quiet Light" },

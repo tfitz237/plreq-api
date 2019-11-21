@@ -25,7 +25,8 @@ RUN rm -rf /opt/yarn-* \
     && apt-get -y install --no-install-recommends yarn
 
 # Install tslint and typescript
-RUN npm install -g tslint typescript
+RUN npm install -g tslint typescript 
+#@nestjs/cli
 
 # Clean up
 RUN apt-get autoremove -y \
