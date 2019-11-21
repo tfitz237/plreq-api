@@ -1,13 +1,13 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
-import { JdLink, JdConnectResponse, JdInit, JdPackage } from '../models/jdownloader';
-import FileService from './file.service';
-import { WsGateway } from '../ws/ws.gateway';
-import { Logger, LogMe } from '../shared/log/log.service';
-import { LogLevel } from '../shared/log/log.entry.entity';
-import { ItiService } from '../iti/iti.service';
 import { resolve } from 'url';
+import { ItiService } from '../iti/iti.service';
+import { JdConnectResponse, JdInit, JdLink, JdPackage } from '../models/jdownloader';
 import ConfigurationService from '../shared/configuration/configuration.service';
+import { LogLevel } from '../shared/log/log.entry.entity';
+import { Logger, LogMe } from '../shared/log/log.service';
+import { WsGateway } from '../ws/ws.gateway';
+import FileService from './file.service';
 @Injectable()
 export class JdService extends LogMe {
     isConnected: boolean = false;
@@ -35,7 +35,7 @@ export class JdService extends LogMe {
     async connect(): Promise<JdConnectResponse> {
         try {
             const config = await this.config();
-            const response = await jdApi.connect(config.jd.email,config.jd.password);
+            const response = await jdApi.connect(config.jd.email, config.jd.password);
             if (response === true) {
                 this.isConnected = true;
                 return {
@@ -113,7 +113,9 @@ export class JdService extends LogMe {
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
-            await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x => `${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName : 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`)}`);
+            await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x =>
+                    `${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName : 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`,
+            )}`);
             if (movedPackages.length > 0) {
                 const cleaned = await this.cleanUp(movedPackages);
                 return cleaned;

@@ -1,12 +1,12 @@
 import { Injectable, UseGuards } from '@nestjs/common';
-import * as pwHash from 'password-hash';
 import { JwtService } from '@nestjs/jwt';
-import { IUser } from '../models/user';
-import { Repository, MoreThan } from 'typeorm';
-import { User } from './auth.user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserLevel } from '../shared/constants';
+import * as pwHash from 'password-hash';
+import { MoreThan, Repository } from 'typeorm';
+import { IUser } from '../models/user';
 import ConfigurationService from '../shared/configuration/configuration.service';
+import { UserLevel } from '../shared/constants';
+import { User } from './auth.user.entity';
 
 @Injectable()
 export class AuthService {

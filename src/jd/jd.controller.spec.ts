@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JdController } from './jd.controller';
-import Configuration from '../shared/configuration';
 import {iConfiguration} from '../models/config';
-import { iUser } from '../models/user';
-import { JdService } from './jd.service';
-import FileService from './file.service';
 import { jdPackage } from '../models/jdownloader';
+import { iUser } from '../models/user';
+import Configuration from '../shared/configuration';
+import FileService from './file.service';
+import { JdController } from './jd.controller';
+import { JdService } from './jd.service';
 
 describe('Jd Controller', () => {
   let module: TestingModule;

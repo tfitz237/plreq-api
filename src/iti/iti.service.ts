@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { Logger, LogMe } from '../shared/log/log.service';
-import { LogLevel } from '../shared/log/log.entry.entity';
-import { ItiLink, ItiError, ItiQuery, ItiLinkResponse } from '../models/iti';
-import { TmdbService } from '../tmdb/tmdb.service';
+import { ItiError, ItiLink, ItiLinkResponse, ItiQuery } from '../models/iti';
 import ConfigurationService from '../shared/configuration/configuration.service';
+import { LogLevel } from '../shared/log/log.entry.entity';
+import { Logger, LogMe } from '../shared/log/log.service';
+import { TmdbService } from '../tmdb/tmdb.service';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
@@ -124,22 +124,24 @@ export class ItiService extends LogMe {
         ];
         let rtn;
         for (const i in formats) {
-            const query: ItiQuery = {
-                query: formats[i],
-                parent: 'TV',
-                child: '',
-            };
-            const res = await this.search(query) as ItiLinkResponse;
-            if (res && res.results && res.results.length > 0) {
-                const hdResult = res.results.find(l => l.child === 'HD');
-                if (hdResult) {
-                    rtn = hdResult;
-                } else {
-                    rtn = res.results[0];
+            if (formats[i]) {
+                const query: ItiQuery = {
+                    query: formats[i],
+                    parent: 'TV',
+                    child: '',
+                };
+                const res = await this.search(query) as ItiLinkResponse;
+                if (res && res.results && res.results.length > 0) {
+                    const hdResult = res.results.find(l => l.child === 'HD');
+                    if (hdResult) {
+                        rtn = hdResult;
+                    } else {
+                        rtn = res.results[0];
+                    }
                 }
-            }
-            if (rtn && rtn.child === 'HD') {
-                return rtn;
+                if (rtn && rtn.child === 'HD') {
+                    return rtn;
+                }
             }
         }
         if (rtn) {
@@ -184,7 +186,9 @@ export class ItiService extends LogMe {
         const imagesDiv = html.match(/<div.*id=\"links_imgref\" data-watch-this="">(.*)<\/div>/);
         const httpRegex = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)';
         if (imagesDiv) {
+            // tslint:disable-next-line: max-line-length
             const reg = /<a href="(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))" target="_blank">(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))<\/a><br class="clear" \/>/;
+            // tslint:disable-next-line: max-line-length
             const gReg = /<a href="(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))" target="_blank">(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))<\/a><br class="clear" \/>/g;
             const linksInDiv = imagesDiv[1].match(gReg);
             if (linksInDiv) {

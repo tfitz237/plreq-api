@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
-import { PassportModule } from '@nestjs/passport';
-import { AuthController } from './auth.controller';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { SharedModule } from '../shared/shared.module';
+import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './auth.user.entity';
 import ConfigurationService from '../shared/configuration/configuration.service';
+import { SharedModule } from '../shared/shared.module';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { User } from './auth.user.entity';
+import { JwtStrategy } from './jwt.strategy';
 @Module({
     imports: [
         PassportModule.register({ defaultStrategy: 'jwt' }),

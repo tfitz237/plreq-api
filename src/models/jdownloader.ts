@@ -1,5 +1,5 @@
-import { Error } from './status';
 import { File} from '../jd/file.service';
+import { Error } from './status';
 export interface JdConnectResponse {
     connected: boolean;
     error?: Error;

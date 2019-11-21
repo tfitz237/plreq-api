@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { JdService } from './jd.service';
-import FileService from './file.service';
-import Configuration from '../shared/configuration';
-import { iConfiguration } from '../models/config';
-import * as jdApi from 'jdownloader-api';
 import { HttpException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import * as jdApi from 'jdownloader-api';
+import { iConfiguration } from '../models/config';
+import Configuration from '../shared/configuration';
+import FileService from './file.service';
+import { JdService } from './jd.service';
 jest.mock('jdownloader-api');
 describe('JdService', () => {
   let service: JdService;

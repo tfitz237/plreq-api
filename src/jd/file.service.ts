@@ -1,14 +1,14 @@
+import { Injectable } from '@nestjs/common';
 import * as fs from 'fs-extra';
 import * as parse from 'parse-torrent-name';
-import { Injectable } from '@nestjs/common';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
-import { WsGateway } from '../ws/ws.gateway';
 import { JdPackage } from '../models/jdownloader';
+import { WsGateway } from '../ws/ws.gateway';
 
 import {spawn} from 'child_process';
-import ConfigurationService from '../shared/configuration/configuration.service';
 import { IConfiguration } from '../models/config';
+import ConfigurationService from '../shared/configuration/configuration.service';
 
 @Injectable()
 export default class FileService {
@@ -65,32 +65,36 @@ export default class FileService {
         packages = this.findVideos(packages);
         const moved = false;
         for (const j in packages) {
-            for (const i in packages[j].files) {
-                const file = packages[j].files[i];
-                if (file) {
-                    const name = this.parseName(file.fileName);
-                    let dir;
-                    let dest;
-                    if (name.isTv) {
-                        dir = path.join(this.tvDestination, name.title);
-                        await fs.ensureDir(dir);
-                        dest = path.join(dir, file.fileName);
-                    } else {
-                        dir = this.movieDestination;
-                        dest = path.join(dir, file.fileName);
-                    }
-                    try {
+            if (packages[j]) {
+                for (const i in packages[j].files) {
+                    if (packages[j].files[i]) {
+                        const file = packages[j].files[i];
+                        if (file) {
+                            const name = this.parseName(file.fileName);
+                            let dir;
+                            let dest;
+                            if (name.isTv) {
+                                dir = path.join(this.tvDestination, name.title);
+                                await fs.ensureDir(dir);
+                                dest = path.join(dir, file.fileName);
+                            } else {
+                                dir = this.movieDestination;
+                                dest = path.join(dir, file.fileName);
+                            }
+                            try {
 
-                        packages[j].files[i].destination = dest;
+                                packages[j].files[i].destination = dest;
 
-                        if (!file.moved) {
-                            await fs.move(file.fullPath, dest, { overwrite: true});
-                            packages[j].files[i].moved = true;
-                            console.log(`moved ${file.fileName} to ${dest}`);
+                                if (!file.moved) {
+                                    await fs.move(file.fullPath, dest, { overwrite: true});
+                                    packages[j].files[i].moved = true;
+                                    console.log(`moved ${file.fileName} to ${dest}`);
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                return [false, packages];
+                            }
                         }
-                    } catch (err) {
-                        console.error(err);
-                        return [false, packages];
                     }
                 }
             }
@@ -163,18 +167,20 @@ export default class FileService {
     private getFiles(dir = this.dir, files_: File[] = []){
         const files = fs.readdirSync(dir);
         for (const i in files){
-            const name = dir + '/' + files[i];
-            if (fs.statSync(name).isDirectory()){
-                this.getFiles(name, files_);
-            } else {
-                const dirs = path.dirname(name).split(path.sep);
-                files_.push({
-                    fileName: path.basename(name),
-                    fullPath: name,
-                    directoryName: dirs[dirs.length - 1].replace(/[\-_\[\]\(\)]+/, ''),
-                    fullDirectoryName: dirs[dirs.length - 1],
-                    moved: false,
-                });
+            if (files[i]) {
+                const name = dir + '/' + files[i];
+                if (fs.statSync(name).isDirectory()){
+                    this.getFiles(name, files_);
+                } else {
+                    const dirs = path.dirname(name).split(path.sep);
+                    files_.push({
+                        fileName: path.basename(name),
+                        fullPath: name,
+                        directoryName: dirs[dirs.length - 1].replace(/[\-_\[\]\(\)]+/, ''),
+                        fullDirectoryName: dirs[dirs.length - 1],
+                        moved: false,
+                    });
+                }
             }
         }
         return files_;

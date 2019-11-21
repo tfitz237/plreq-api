@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { open as sqlliteOpen, Database } from 'sqlite';
-import { Episode } from '../models/plex';
 import * as path from 'path';
-import { WsGateway } from '../ws/ws.gateway';
+import { Database, open as sqlliteOpen } from 'sqlite';
+import { Episode } from '../models/plex';
 import ConfigurationService from '../shared/configuration/configuration.service';
+import { WsGateway } from '../ws/ws.gateway';
 @Injectable()
 export default class PlexDb {
     serverGuid = '4c41cc0c0872f8900cd21d92b15f573ca8dfdd61';

@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 
-import { Repository } from 'typeorm';
-import { TvSubscription } from './tv-subscription.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LogMe, Logger } from '../shared/log/log.service';
+import { Repository } from 'typeorm';
 import { ItiService } from '../iti/iti.service';
 import { JdService } from '../jd/jd.service';
-import { TmdbService } from '../tmdb/tmdb.service';
-import { ItiLink, ItiError, ItiLinkResponse } from '../models/iti';
+import { ItiError, ItiLink, ItiLinkResponse } from '../models/iti';
 import PlexDb from '../plex/plex.db';
-import { TvEpisode, ItiLinkStatus } from './suscription.episode.entity';
+import { Logger, LogMe } from '../shared/log/log.service';
+import { TmdbService } from '../tmdb/tmdb.service';
 import { MovieSubscription } from './movie-subscription.entity';
+import { ItiLinkStatus, TvEpisode } from './suscription.episode.entity';
+import { TvSubscription } from './tv-subscription.entity';
 
 @Injectable()
 export class SubscriptionsService extends LogMe{
@@ -57,13 +57,15 @@ export class SubscriptionsService extends LogMe{
     async getTvSubscriptions(skipTmdb = true): Promise<TvSubscription[]> {
         const subs = await this.tvSubRepo.find();
         for (const i in subs) {
-            const sub = subs[i];
-            await this.updateEpisodes(sub, true, skipTmdb);
-            const idx = this.tvSubscriptions.findIndex(s => s.id === sub.id);
-            if (idx !== -1) {
-                Object.assign(this.tvSubscriptions[idx], sub);
-            } else {
-                this.tvSubscriptions.push(sub);
+            if (subs[i]) {
+                const sub = subs[i];
+                await this.updateEpisodes(sub, true, skipTmdb);
+                const idx = this.tvSubscriptions.findIndex(s => s.id === sub.id);
+                if (idx !== -1) {
+                    Object.assign(this.tvSubscriptions[idx], sub);
+                } else {
+                    this.tvSubscriptions.push(sub);
+                }
             }
         }
         this.tvSubscriptions.forEach((sub, idx) => {
@@ -82,12 +84,14 @@ export class SubscriptionsService extends LogMe{
     async getMovieSubscriptions(): Promise<MovieSubscription[]> {
         const subs = await this.movieSubRepo.find();
         for (const i in subs) {
-            const sub = subs[i];
-            const idx = this.movieSubscriptions.findIndex(s => s.id === sub.id);
-            if (idx !== -1) {
-                Object.assign(this.movieSubscriptions[idx], sub);
-            } else {
-                this.movieSubscriptions.push(sub);
+            if (subs[i]) {
+                const sub = subs[i];
+                const idx = this.movieSubscriptions.findIndex(s => s.id === sub.id);
+                if (idx !== -1) {
+                    Object.assign(this.movieSubscriptions[idx], sub);
+                } else {
+                    this.movieSubscriptions.push(sub);
+                }
             }
         }
         this.movieSubscriptions.forEach((sub, idx) => {
@@ -245,15 +249,17 @@ export class SubscriptionsService extends LogMe{
             let failed =  false;
             if (missingEpisodes.length > 0) {
                 for (const i in missingEpisodes) {
-                    const episode = missingEpisodes[i];
-                    const response = await this.itiService.findEpisode(sub.name, sub.season, episode.episode);
-                    const itiError = response as ItiError;
-                    const itiLink = response as ItiLink;
-                    if (!itiError.error && !itiError.loggedIn) {
-                        await this.jdService.addLinks(itiLink.linkid, itiLink.title);
-                    } else {
-                        episode.itiStatus = ItiLinkStatus.NOTFOUND;
-                        failed = true;
+                    if (missingEpisodes[i]) {
+                        const episode = missingEpisodes[i];
+                        const response = await this.itiService.findEpisode(sub.name, sub.season, episode.episode);
+                        const itiError = response as ItiError;
+                        const itiLink = response as ItiLink;
+                        if (!itiError.error && !itiError.loggedIn) {
+                            await this.jdService.addLinks(itiLink.linkid, itiLink.title);
+                        } else {
+                            episode.itiStatus = ItiLinkStatus.NOTFOUND;
+                            failed = true;
+                        }
                     }
                 }
             }

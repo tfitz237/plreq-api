@@ -17,14 +17,14 @@
             false
         ],
         "ordered-imports": [
-            false
+            true
         ],
         "max-line-length": [
             true,
-            150
+            200
         ],
         "member-ordering": [
-            false
+            true
         ],
         "curly": false,
         "interface-name": [
@@ -33,14 +33,12 @@
         "array-type": [
             false
         ],
+        "radix": false,
         "no-empty-interface": false,
         "no-empty": false,
         "arrow-parens": false,
         "object-literal-sort-keys": false,
         "no-unused-expression": false,
-        "max-classes-per-file": [
-            false
-        ],
         "variable-name": [
             false
         ],
@@ -48,8 +46,10 @@
             false
         ],
         "one-variable-per-declaration": [
-            false
-        ]
+            true
+        ],
+        "prefer-for-of": false,
+        "no-console": false
     },
     "rulesDirectory": []
 }
