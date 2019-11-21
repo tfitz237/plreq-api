@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { ItiLinkStatus } from "./suscription.episode.entity";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { ItiLinkStatus } from './suscription.episode.entity';
 
 @Entity()
 export class MovieSubscription {
@@ -18,7 +18,7 @@ export class MovieSubscription {
     @Column()
     currentQuality: string;
 
-    @Column({nullable:true})
+    @Column({nullable: true})
     highestQuality: string;
 
     @Column()

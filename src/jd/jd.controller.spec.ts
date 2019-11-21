@@ -13,23 +13,23 @@ describe('Jd Controller', () => {
   let svc: JdService;
   const config: iConfiguration = {
     jd: {
-      email: "test@test.com",
-      password: "test@test.com"
+      email: 'test@test.com',
+      password: 'test@test.com',
     },
     jwt: {
-      secret: "test"
+      secret: 'test',
     },
     filePaths: {
       dir: 'testDir',
       tvDestination: 'testTv',
-      movieDestination: 'testMovie'
+      movieDestination: 'testMovie',
     },
     users: [{
       userGuid: 'guid',
       level: 4,
       username: 'testuser',
-      password: 'unhashedpassword'
-    }]
+      password: 'unhashedpassword',
+    }],
   };
 
   beforeAll(async () => {
@@ -41,7 +41,7 @@ describe('Jd Controller', () => {
     svc = module.get<JdService>(JdService);
   });
 
-  it('should be defined', () => { 
+  it('should be defined', () => {
     expect(ctl).toBeDefined();
   });
 
@@ -58,11 +58,11 @@ describe('Jd Controller', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
-      }
-    }, {      
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
+      },
+    }, {
       bytesLoaded: 0,
       name: 'name2',
       finished: true,
@@ -74,11 +74,11 @@ describe('Jd Controller', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
       }}];
-    jest.spyOn(svc, "getPackages").mockImplementation( () => expected);
+    jest.spyOn(svc, 'getPackages').mockImplementation( () => expected);
     const result = await ctl.packages() as jdPackage[];
     expect(result).toBe(expected);
     expect(result.length).toEqual(2);
@@ -97,31 +97,31 @@ describe('Jd Controller', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
-      }
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
+      },
     };
-    jest.spyOn(svc, "getPackages").mockImplementation( () => expected);
+    jest.spyOn(svc, 'getPackages').mockImplementation( () => expected);
     const result: jdPackage = await ctl.package('uuid') as jdPackage;
     expect(result).toBe(expected);
   });
 
   it('should addLinks successfully', async () => {
     const expected = {
-      success: true
+      success: true,
     };
-    jest.spyOn(svc, "addLinks").mockImplementation( () => expected);
+    jest.spyOn(svc, 'addLinks').mockImplementation( () => expected);
     const result = await ctl.addLinks(['links']);
     expect(result).toBe(expected);
   });
 
   it('should cleanUp successfully', async () => {
     const expected = {
-      success: true
+      success: true,
     };
-    jest.spyOn(svc, "cleanUp").mockImplementation( () => expected);
+    jest.spyOn(svc, 'cleanUp').mockImplementation( () => expected);
     const result = await ctl.cleanUp();
     expect(result).toBe(expected);
-  })
+  });
 });

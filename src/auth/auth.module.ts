@@ -5,12 +5,12 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { SharedModule } from '../shared/shared.module';
-import Configuration from '../shared/configuration';
+import Configuration from '../shared/configuration/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './auth.user.entity';
 @Module({
     imports: [
-        PassportModule.register({ defaultStrategy: 'jwt' }), 
+        PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.register({
             secretOrPrivateKey: new Configuration().jwt.secret,
             signOptions: {
@@ -18,10 +18,10 @@ import { User } from './auth.user.entity';
             },
         }),
         SharedModule,
-        TypeOrmModule.forFeature([User])
+        TypeOrmModule.forFeature([User]),
     ],
     providers: [AuthService, JwtStrategy],
     controllers: [AuthController],
-    exports: [JwtStrategy, AuthService]
+    exports: [JwtStrategy, AuthService],
 })
 export class AuthModule {}

@@ -8,6 +8,6 @@ import { AuthModule } from '../auth/auth.module';
     imports: [AuthModule, SharedModule],
     controllers: [PlexController],
     providers: [PlexDb],
-    exports: [PlexDb]
+    exports: [PlexDb],
 })
 export class PlexModule {}

@@ -9,6 +9,6 @@ import { TmdbModule } from '../tmdb/tmdb.module';
   imports: [AuthModule, SharedModule, TmdbModule],
   controllers: [ItiController],
   providers: [ItiService],
-  exports: [ItiService]
+  exports: [ItiService],
 })
 export class ItiModule {}

@@ -1,7 +1,7 @@
-import { Controller, Post, Body, UseGuards } from "@nestjs/common";
-import PlexDb from "./plex.db";
-import { RolesGuard, Roles } from "../auth/auth.roles";
-import { UserLevel } from "../auth/auth.service";
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import PlexDb from './plex.db';
+import { RolesGuard, Roles } from '../auth/auth.roles';
+import { UserLevel } from '../auth/auth.service';
 
 @UseGuards(RolesGuard)
 @Controller('plex')
@@ -23,7 +23,7 @@ export default class PlexController {
 
     @Roles(UserLevel.User)
     @Post('get-show')
-    async getTvShow(@Body() query: any) {        
+    async getTvShow(@Body() query: any) {
         return await this.plexDb.getTvShow(query.name);
     }
 

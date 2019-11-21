@@ -7,7 +7,7 @@ describe('Iti Controller', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       controllers: [ItiController],
-      providers: [ItiService]
+      providers: [ItiService],
     }).compile();
   });
   it('should be defined', () => {

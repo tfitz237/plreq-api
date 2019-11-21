@@ -11,23 +11,23 @@ describe('JdService', () => {
   let fileService: FileService;
   const config: iConfiguration = {
     jd: {
-      email: "test@test.com",
-      password: "test@test.com"
+      email: 'test@test.com',
+      password: 'test@test.com',
     },
     jwt: {
-      secret: "test"
+      secret: 'test',
     },
     filePaths: {
       dir: 'testDir',
       tvDestination: 'testTv',
-      movieDestination: 'testMovie'
+      movieDestination: 'testMovie',
     },
     users: [{
       userGuid: 'guid',
       level: 4,
       username: 'testuser',
-      password: 'unhashedpassword'
-    }]
+      password: 'unhashedpassword',
+    }],
   };
   beforeAll(async () => {
 
@@ -45,16 +45,16 @@ describe('JdService', () => {
     service.isConnected = false;
     service.deviceId = undefined;
     service.pollPackages = false;
-  })
+  });
   it('should connect successfully', async () => {
     const expected = {
-      connected: true
+      connected: true,
     };
     jdApi.connect.mockImplementation((email, pass) => {
       expect(email).toBe(config.jd.email);
       expect(pass).toBe(config.jd.password);
       return true;
-    })
+    });
 
     const result = await service.connect();
     expect(result).toEqual(expected);
@@ -64,12 +64,12 @@ describe('JdService', () => {
   it('should throw when not connected successfully (no catch)', async () => {
     const expected = new HttpException({
       connected: false,
-      error: '{"src":"test","type": "test"}'
+      error: '{"src":"test","type": "test"}',
     }, 400);
     jdApi.connect.mockImplementation((email, pass) => {
       return {error: '{"src":"test","type": "test"}'};
     });
-    const result = service.connect()
+    const result = service.connect();
     expect(result).rejects.toBeInstanceOf(HttpException);
     expect(result).rejects.toHaveProperty('message.connected', false);
   });
@@ -77,10 +77,10 @@ describe('JdService', () => {
     jdApi.connect.mockImplementation((email, pass) => {
       throw {
         connected: false,
-        error: '{"src":"test","type": "test"}'
+        error: '{"src":"test","type": "test"}',
       };
     });
-    const result = service.connect()
+    const result = service.connect();
     expect(result).rejects.toBeInstanceOf(HttpException);
   });
 
@@ -94,7 +94,7 @@ describe('JdService', () => {
   it('should initiate the jdService successfully', async () => {
     const devices = [{
       id: 1,
-      name:'jdownloader'
+      name: 'jdownloader',
     }];
     const packages = [{
       bytesLoaded: 0,
@@ -108,11 +108,11 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
-      }
-    }, {      
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
+      },
+    }, {
       bytesLoaded: 0,
       name: 'name2',
       finished: true,
@@ -124,27 +124,26 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
       }}];
     service.pollPackages = false;
-    jest.spyOn(service, "connect").mockReturnValue({ connected: true});
-    jest.spyOn(service, "getPackages").mockReturnValue(packages);
-    jest.spyOn(service, "movePackages").mockImplementation();
+    jest.spyOn(service, 'connect').mockReturnValue({ connected: true});
+    jest.spyOn(service, 'getPackages').mockReturnValue(packages);
+    jest.spyOn(service, 'movePackages').mockImplementation();
     jdApi.listDevices.mockImplementation(() => devices);
     const result = await service.initiate();
     expect(result.success).toEqual(true);
     expect(result.id).toBe(devices[0].id);
     expect(result.packages[0]).toBe(packages[0]);
-    
 
   });
 
   it('should return cached values if exists on initiate', async () => {
     const devices = [{
       id: '1',
-      name:'jdownloader'
+      name: 'jdownloader',
     }];
     const packages = [{
       bytesLoaded: 0,
@@ -158,11 +157,11 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
-      }
-    }, {      
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
+      },
+    }, {
       bytesLoaded: 0,
       name: 'name2',
       finished: true,
@@ -174,9 +173,9 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
       }}];
     service.isConnected = true;
     service.pollPackages = false;
@@ -186,18 +185,17 @@ describe('JdService', () => {
     expect(result.success).toEqual(true);
     expect(result.id).toBe(devices[0].id);
     expect(result.packages[0]).toBe(packages[0]);
-    
 
   });
 
   it('should throw if connected fails', async () => {
-    jest.spyOn(service, "connect").mockReturnValue({ connected: false, error: '{"src": "test", "type": "test"}'});
+    jest.spyOn(service, 'connect').mockReturnValue({ connected: false, error: '{"src": "test", "type": "test"}'});
     const result = service.initiate();
     expect(result).rejects.toBeInstanceOf(HttpException);
   });
 
   it('should throw if deviceId not returned', async () => {
-    jest.spyOn(service, "connect").mockReturnValue({ connected: true});
+    jest.spyOn(service, 'connect').mockReturnValue({ connected: true});
     jdApi.listDevices.mockReturnValue([]);
     const result = service.initiate();
     expect(result).rejects.toBeInstanceOf(HttpException);
@@ -206,7 +204,7 @@ describe('JdService', () => {
   it('should initiate polling', async () => {
     const devices = [{
       id: 1,
-      name:'jdownloader'
+      name: 'jdownloader',
     }];
     const packages = [{
       bytesLoaded: 0,
@@ -220,11 +218,11 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
-      }
-    }, {      
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
+      },
+    }, {
       bytesLoaded: 0,
       name: 'name2',
       finished: true,
@@ -236,20 +234,20 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
       }}];
     jest.useFakeTimers();
 
     service.pollPackages = true;
     let movePackages = 0;
     let getPackages = 0;
-    jest.spyOn(service, "connect").mockReturnValue({ connected: true});
-    jest.spyOn(service, "getPackages").mockImplementation(() => {
+    jest.spyOn(service, 'connect').mockReturnValue({ connected: true});
+    jest.spyOn(service, 'getPackages').mockImplementation(() => {
       getPackages++;
-      return packages});
-    jest.spyOn(service, "movePackages").mockImplementation(() => movePackages++);
+      return packages; });
+    jest.spyOn(service, 'movePackages').mockImplementation(() => movePackages++);
     jdApi.listDevices.mockImplementation(() => devices);
     const result = await service.initiate();
     expect(result.success).toEqual(true);
@@ -276,11 +274,11 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
-      }
-    }, {      
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
+      },
+    }, {
       bytesLoaded: 0,
       name: 'name2',
       finished: true,
@@ -292,16 +290,16 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
       }}];
     service.packages = packages;
-    jest.spyOn(fileService, "moveVideos").mockResolvedValue([true, true]);
-    const cleanedUp = jest.spyOn(service, "cleanUp");
+    jest.spyOn(fileService, 'moveVideos').mockResolvedValue([true, true]);
+    const cleanedUp = jest.spyOn(service, 'cleanUp');
     cleanedUp.mockImplementation(() => {
       return {
-        success: true
+        success: true,
       };
     });
     const result = await service.movePackages();
@@ -321,11 +319,11 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
-      }
-    }, {      
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
+      },
+    }, {
       bytesLoaded: 0,
       name: 'name2',
       finished: true,
@@ -337,14 +335,14 @@ describe('JdService', () => {
       speed: 1000,
       bytesTotal: 1000,
       progress: {
-          percent: "1%",
-          eta: "1m2s",
-          speedInMb: "1mb/s",
+          percent: '1%',
+          eta: '1m2s',
+          speedInMb: '1mb/s',
       }}];
     service.packages = packages;
-    jest.spyOn(fileService, "moveVideos").mockReturnValue([true, false]);
-    const cleanedUp = jest.spyOn(service, "cleanUp")
-    
+    jest.spyOn(fileService, 'moveVideos').mockReturnValue([true, false]);
+    const cleanedUp = jest.spyOn(service, 'cleanUp');
+
     const result = await service.movePackages();
     expect(cleanedUp).not.toBeCalled();
   });

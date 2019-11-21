@@ -8,6 +8,6 @@ import { AuthModule } from '../auth/auth.module';
   imports: [SharedModule, AuthModule],
   controllers: [TmdbController],
   providers: [TmdbService],
-  exports: [TmdbService]
+  exports: [TmdbService],
 })
 export class TmdbModule {}

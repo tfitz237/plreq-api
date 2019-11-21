@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { TvEpisode } from "./suscription.episode.entity";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { TvEpisode } from './suscription.episode.entity';
 
 @Entity()
 export class TvSubscription {
@@ -15,7 +15,7 @@ export class TvSubscription {
     @Column()
     season: number;
 
-    @OneToMany(type => TvEpisode, tvEp => tvEp.subscription, {cascade: true, onDelete: "CASCADE", onUpdate: "CASCADE"}) 
+    @OneToMany(type => TvEpisode, tvEp => tvEp.subscription, {cascade: true, onDelete: 'CASCADE', onUpdate: 'CASCADE'})
     episodes: TvEpisode[];
 
     get episodesInPlex() {
