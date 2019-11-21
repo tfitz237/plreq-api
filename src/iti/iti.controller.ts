@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ItiService } from './iti.service';
 import { ItiQuery, ItiLink, ItiError, ItiTvShowQuery, ItiLinkResponse } from '../models/iti';
 import { RolesGuard, Roles } from '../auth/auth.roles';
-import { UserLevel } from '../auth/auth.service';
+import { UserLevel } from '../shared/constants';
 
 @UseGuards(RolesGuard)
 @Controller('iti')

@@ -1,8 +1,8 @@
 import { Controller, Post, UseGuards, Body } from '@nestjs/common';
-import { AuthService, UserLevel } from './auth.service';
+import { AuthService } from './auth.service';
 import { IUser } from '../models/user';
 import { RolesGuard, Roles } from './auth.roles';
-
+import { UserLevel } from '../shared/constants';
 @UseGuards(RolesGuard)
 @Controller('auth')
 export class AuthController {

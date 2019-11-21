@@ -1,7 +1,7 @@
 import { Controller, Get, UseGuards, Post, Body, Delete, Param } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { RolesGuard, Roles } from '../auth/auth.roles';
-import { UserLevel } from '../auth/auth.service';
+import { UserLevel } from '../shared/constants';
 
 @UseGuards(RolesGuard)
 @Controller('subscriptions')

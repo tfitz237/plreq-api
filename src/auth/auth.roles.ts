@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SetMetadata } from '@nestjs/common';
-import { UserLevel } from './auth.service';
+import { UserLevel } from '../shared/constants';
 import {JwtStrategy} from './jwt.strategy';
 import { IUser } from '../models/user';
 export const Roles = (...roles: UserLevel[]) => SetMetadata('roles', roles);

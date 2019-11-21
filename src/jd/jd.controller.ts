@@ -2,7 +2,7 @@ import { Controller, Get, Param, UseGuards, Post, Body } from '@nestjs/common';
 import { JdService } from './jd.service';
 import { JdConnectResponse, JdInit, JdPackage } from 'models/jdownloader';
 import { RolesGuard, Roles } from '../auth/auth.roles';
-import { UserLevel } from '../auth/auth.service';
+import { UserLevel } from '../shared/constants';
 
 @UseGuards(RolesGuard)
 @Controller('jd')

@@ -10,11 +10,11 @@ import { JdService } from '../jd/jd.service';
 import FileService from '../jd/file.service';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { JdPackage } from '../models/jdownloader';
-import { guid, UserLevel, AuthService } from '../auth/auth.service';
+import { guid, AuthService } from '../auth/auth.service';
 import PlexDb from '../plex/plex.db';
 import { IUser } from '../models/user';
 import axios from 'axios';
-
+import { UserLevel } from '../shared/constants';
 @WebSocketGateway()
 export class WsGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer() server;

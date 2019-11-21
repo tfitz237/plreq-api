@@ -2,24 +2,16 @@ import { Injectable, UseGuards } from '@nestjs/common';
 import * as pwHash from 'password-hash';
 import { JwtService } from '@nestjs/jwt';
 import { IUser } from '../models/user';
-import Configuration from '../shared/configuration/configuration';
 import { Repository, MoreThan } from 'typeorm';
 import { User } from './auth.user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-
-export enum UserLevel {
-    Guest,
-    User,
-    ItiUser,
-    Admin,
-    SuperAdmin,
-}
+import { UserLevel } from '../shared/constants';
+import ConfigurationService from '../shared/configuration/configuration.service';
 
 @Injectable()
 export class AuthService {
     users: IUser[];
     constructor(private readonly jwtService: JwtService,
-                private readonly config: Configuration,
                 @InjectRepository(User) private readonly userRepo: Repository<User>,
         ) {
     }
