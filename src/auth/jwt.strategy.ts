@@ -2,16 +2,16 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from './auth.service';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import Configuration from '../shared/configuration/configuration';
 import { IUser } from '../models/user';
 import * as jwt from 'jsonwebtoken';
+import ConfigurationService from '../shared/configuration/configuration.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly authService: AuthService, private readonly configuration: Configuration) {
-    super({
+  constructor(private readonly authService: AuthService, private readonly configService: ConfigurationService) {
+    super( {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: configuration.jwt.secret,
+      secretOrKey: 'test',
     });
   }
 
@@ -25,8 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async verifyJwt(token: string): Promise<IUser|boolean> {
     try {
+      const config = await this.configService.getConfig();
       return new Promise<IUser>(resolve => {
-        jwt.verify(token, this.configuration.jwt.secret, async (err, decoded) => {
+        jwt.verify(token, config.jwt.secret, async (err, decoded) => {
           resolve(await this.authService.validateUser(decoded) ? decoded : false);
         });
       });

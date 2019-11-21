@@ -7,7 +7,7 @@ export class AppController {
   @Get()
   root(): any {
     return {
-      version: '0.0.1'
+      version: '0.0.1',
     }
   }
 }

@@ -1,9 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../auth/auth.user.entity';
 
-
 @Entity()
-export class Configuration {
+export default class Configurations {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -22,4 +21,4 @@ export class Configuration {
     @ManyToMany(type => User)
     user: User;
 
-} 
+}

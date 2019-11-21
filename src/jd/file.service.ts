@@ -2,12 +2,13 @@ import * as fs from 'fs-extra';
 import * as parse from 'parse-torrent-name';
 import { Injectable } from '@nestjs/common';
 import * as path from 'path';
-import Configuration from '../shared/configuration/configuration';
 import * as rimraf from 'rimraf';
 import { WsGateway } from '../ws/ws.gateway';
 import { JdPackage } from '../models/jdownloader';
 
 import {spawn} from 'child_process';
+import ConfigurationService from '../shared/configuration/configuration.service';
+import { IConfiguration } from '../models/config';
 
 @Injectable()
 export default class FileService {
@@ -15,12 +16,13 @@ export default class FileService {
     tvDestination: string;
     movieDestination: string;
     socket: WsGateway;
-
-    constructor(private readonly config: Configuration) {
+    config: IConfiguration;
+    constructor(private readonly configService: ConfigurationService) {
         this.setConfiguration();
     }
 
-    setConfiguration() {
+    async setConfiguration() {
+        this.config = await this.configService.getConfig();
         this.dir = this.config.filePaths.dir;
         this.tvDestination = this.config.filePaths.tvDestination;
         this.movieDestination = this.config.filePaths.movieDestination;

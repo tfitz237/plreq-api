@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { open as sqlliteOpen, Database } from 'sqlite';
 import { Episode } from '../models/plex';
-import Configuration from '../shared/configuration/configuration';
 import * as path from 'path';
 import { WsGateway } from '../ws/ws.gateway';
+import ConfigurationService from '../shared/configuration/configuration.service';
 @Injectable()
 export default class PlexDb {
     serverGuid = '4c41cc0c0872f8900cd21d92b15f573ca8dfdd61';
@@ -11,14 +11,18 @@ export default class PlexDb {
     db: Database;
     socket: WsGateway;
 
-    constructor(private config: Configuration) {}
+    constructor(private configService: ConfigurationService) {}
 
     setSocket(socket: WsGateway) {
         this.socket = socket;
     }
 
+    async config() {
+        return this.configService.getConfig();
+    }
+
     async connect() {
-        this.db = await sqlliteOpen(path.join(this.config.plex.dbLocation, 'com.plexapp.plugins.library.db'), {verbose: true});
+        this.db = await sqlliteOpen(path.join((await this.config()).plex.dbLocation, 'com.plexapp.plugins.library.db'), {verbose: true});
     }
 
     async tvShowExists(name: string, season: number = -1, episode: number = -1): Promise<boolean> {

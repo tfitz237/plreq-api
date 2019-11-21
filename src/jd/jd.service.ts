@@ -1,6 +1,5 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
-import Configuration from '../shared/configuration/configuration';
 import { JdLink, JdConnectResponse, JdInit, JdPackage } from '../models/jdownloader';
 import FileService from './file.service';
 import { WsGateway } from '../ws/ws.gateway';
@@ -8,6 +7,7 @@ import { Logger, LogMe } from '../shared/log/log.service';
 import { LogLevel } from '../shared/log/log.entry.entity';
 import { ItiService } from '../iti/iti.service';
 import { resolve } from 'url';
+import ConfigurationService from '../shared/configuration/configuration.service';
 @Injectable()
 export class JdService extends LogMe {
     isConnected: boolean = false;
@@ -17,7 +17,7 @@ export class JdService extends LogMe {
     pollPackages: boolean = true;
     private socket: WsGateway;
     constructor(private readonly fileService: FileService,
-                private readonly config: Configuration, private readonly logService: Logger, private readonly itiService: ItiService) {
+                private readonly configService: ConfigurationService, private readonly logService: Logger, private readonly itiService: ItiService) {
             super(logService);
     }
 
@@ -27,10 +27,12 @@ export class JdService extends LogMe {
     }
 
     get isInitiated(): boolean { return this.isConnected && !!this.deviceId; }
-
+    async config() {
+        return await this.configService.getConfig();
+    }
     async connect(): Promise<JdConnectResponse> {
         try {
-            const response = await jdApi.connect(this.config.jd.email, this.config.jd.password);
+            const response = await jdApi.connect((await this.config()).jd.email,(await this.config()).jd.password);
             if (response === true) {
                 this.isConnected = true;
                 return {

@@ -1,32 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import Configuration from '../shared/configuration/configuration';
 import { TmdbEpisode } from '../models/tmdb';
+import ConfigurationService from '../shared/configuration/configuration.service';
 
 @Injectable()
 export class TmdbService {
     private genres: any;
-    constructor(private readonly config: Configuration) {
+    constructor(private readonly configService: ConfigurationService) {
     }
 
+    async config() {
+        return await this.configService.getConfig();
+    }
     async getSeason(name: string, season: number, id?: number): Promise<{showId: number, episodes: TmdbEpisode[]}> {
         if (!id) {
             id = await this.getShowId(name);
         }
         if (id) {
-            const seasonResults = await axios.get(`https://api.themoviedb.org/3/tv/${id}/season/${season}?api_key=${this.config.tmdb.apiKey}`);
+            const seasonResults = await axios.get(`https://api.themoviedb.org/3/tv/${id}/season/${season}?api_key=${(await this.config()).tmdb.apiKey}`);
             return {showId: id, episodes: seasonResults.data.episodes};
         }
         return null;
     }
 
     async searchForShow(name: string) {
-        const result = await axios.get(`https://api.themoviedb.org/3/search/tv?api_key=${this.config.tmdb.apiKey}&query=${name}`);
+        const result = await axios.get(`https://api.themoviedb.org/3/search/tv?api_key=${(await this.config()).tmdb.apiKey}&query=${name}`);
         return await this.mapTvSearchResults(result.data.results);
     }
 
     async searchForMovie(name: string, single?: boolean) {
-        const result = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${this.config.tmdb.apiKey}&query=${name}`);
+        const result = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${(await this.config()).tmdb.apiKey}&query=${name}`);
         if (single) {
             const singleResult = await this.getMovie(result.data.results[0].id);
             return singleResult;
@@ -35,12 +38,12 @@ export class TmdbService {
     }
 
     async getMovie(id: number) {
-        const result = await axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${this.config.tmdb.apiKey}`);
+        const result = await axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${(await this.config()).tmdb.apiKey}`);
         return result.data;
     }
 
     async getShowSeasons(id: number) {
-        const result = await axios.get(`https://api.themoviedb.org/3/tv/${id}?api_key=${this.config.tmdb.apiKey}`);
+        const result = await axios.get(`https://api.themoviedb.org/3/tv/${id}?api_key=${(await this.config()).tmdb.apiKey}`);
         return this.mapSeasonSearchResults(result.data);
     }
 
@@ -94,8 +97,8 @@ export class TmdbService {
             return this.genres;
         }
 
-        const movieResults = await axios.get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${this.config.tmdb.apiKey}`);
-        const tvResults = await axios.get(`https://api.themoviedb.org/3/genre/tv/list?api_key=${this.config.tmdb.apiKey}`);
+        const movieResults = await axios.get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${(await this.config()).tmdb.apiKey}`);
+        const tvResults = await axios.get(`https://api.themoviedb.org/3/genre/tv/list?api_key=${(await this.config()).tmdb.apiKey}`);
         this.genres = [];
         this.genres[MediaType.TV]  = tvResults.data.genres;
         this.genres[MediaType.MOVIE] = movieResults.data.genres;

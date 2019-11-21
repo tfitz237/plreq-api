@@ -3,19 +3,23 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { SharedModule } from '../shared/shared.module';
-import Configuration from '../shared/configuration/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './auth.user.entity';
+import ConfigurationService from '../shared/configuration/configuration.service';
 @Module({
     imports: [
         PassportModule.register({ defaultStrategy: 'jwt' }),
-        JwtModule.register({
-            secretOrPrivateKey: new Configuration().jwt.secret,
-            signOptions: {
-                expiresIn: 7776000,
-            },
+        JwtModule.registerAsync({
+            imports: [SharedModule],
+            useFactory: async (config: ConfigurationService) => ({
+                secretOrPrivateKey: (await config.getConfig()).jwt.secret,
+                signOptions: {
+                    expiresIn: 7776000,
+                },
+            }),
+            inject: [ConfigurationService],
         }),
         SharedModule,
         TypeOrmModule.forFeature([User]),

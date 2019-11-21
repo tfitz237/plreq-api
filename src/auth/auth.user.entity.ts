@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { UserLevel } from './auth.service';
-
+import { UserLevel } from '../shared/constants';
 @Entity()
 export class User {
     @PrimaryGeneratedColumn()
