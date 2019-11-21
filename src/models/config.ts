@@ -1,28 +1,28 @@
-import { iUser } from "./user";
+import { IUser } from './user';
 
-export interface iConfiguration {
+export interface IConfiguration {
     jd: {
         email: string,
-        password: string
-    },
+        password: string,
+    };
     jwt: {
-        secret
-    },
+        secret,
+    };
     filePaths: {
         dir: string,
         tvDestination: string,
-        movieDestination: string
-    },
-    users: iUser[],
+        movieDestination: string,
+    };
+    users: IUser[];
     iti: {
         host: string,
         user: string,
-        pass: string
-    },
+        pass: string,
+    };
     plex: {
         dbLocation: string;
-    },
+    };
     tmdb: {
         apiKey: string;
-    }
+    };
 }

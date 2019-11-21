@@ -14,6 +14,6 @@ import { MovieSubscription } from './movie-subscription.entity';
 @Module({
     imports: [ TypeOrmModule.forFeature([TvSubscription, MovieSubscription]), ItiModule, JdModule, AuthModule, SharedModule, PlexModule, TmdbModule],
     providers: [SubscriptionsService],
-    controllers: [SubscriptionsController]
+    controllers: [SubscriptionsController],
 })
 export class SubscriptionsModule {}

@@ -1,4 +1,4 @@
-export interface itiLink {
+export interface ItiLink {
     linkid: string;
     parent: string;
     child: string;
@@ -9,19 +9,19 @@ export interface itiLink {
     poster: string;
 }
 
-export interface itiError {
+export interface ItiError {
     loggedIn?: boolean;
     error?: string;
 }
 
-export interface itiQuery {
+export interface ItiQuery {
     query: string;
     parent: string;
     child: string;
     page?: number;
 }
 
-export interface itiTvShowQuery {
+export interface ItiTvShowQuery {
     id?: number;
     name: string;
     season?: number;
@@ -29,7 +29,7 @@ export interface itiTvShowQuery {
     single?: boolean;
 }
 
-export interface itiLinkResponse {
-    results: itiLink[];
+export interface ItiLinkResponse {
+    results: ItiLink[];
     page: number;
 }

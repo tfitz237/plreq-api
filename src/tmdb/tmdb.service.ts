@@ -1,19 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import Configuration from '../shared/configuration';
-import { tmdbEpisode } from '../models/tmdb';
-
-
+import Configuration from '../shared/configuration/configuration';
+import { TmdbEpisode } from '../models/tmdb';
 
 @Injectable()
 export class TmdbService {
     private genres: any;
     constructor(private readonly config: Configuration) {
-    }     
+    }
 
-
-
-    async getSeason(name: string, season: number, id?: number): Promise<{showId: number, episodes:tmdbEpisode[]}> {
+    async getSeason(name: string, season: number, id?: number): Promise<{showId: number, episodes: TmdbEpisode[]}> {
         if (!id) {
             id = await this.getShowId(name);
         }
@@ -57,10 +53,10 @@ export class TmdbService {
                 imdbId: x.imdb_id,
                 description: x.overview,
                 firstYear: x.release_date,
-                posterPath:'http://image.tmdb.org/t/p/w500' + x.poster_path,
+                posterPath: 'http://image.tmdb.org/t/p/w500' + x.poster_path,
                 genres: single ? x.genres : this.mapGenres(x.genre_ids, genres[MediaType.MOVIE]),
                 voteAverage: x.vote_average,
-            }
+            };
         });
     }
 
@@ -70,7 +66,7 @@ export class TmdbService {
                 airYear: x.air_date ? x.air_date.split('-')[0] : null,
                 name: x.name,
                 seasonNumber: x.season_number,
-                numberOfEpisodes: x.episode_count
+                numberOfEpisodes: x.episode_count,
             })).filter(x => x.seasonNumber > 0);
     }
 
@@ -85,15 +81,15 @@ export class TmdbService {
                 firstAirDate: x.first_air_date,
                 firstYear: x.first_air_date.split('-')[0],
                 description: x.overview,
-                genres: this.mapGenres(x.genre_ids, genres[MediaType.TV])
-            }
+                genres: this.mapGenres(x.genre_ids, genres[MediaType.TV]),
+            };
         });
         return rtn;
     }
 
     async getGenres() {
-        if (this.genres && 
-            this.genres.tv && this.genres.tv.length > 0 && 
+        if (this.genres &&
+            this.genres.tv && this.genres.tv.length > 0 &&
             this.genres.movie && this.genres.movie.length > 0) {
             return this.genres;
         }
@@ -125,9 +121,8 @@ export class TmdbService {
 
 enum MediaType {
     TV,
-    MOVIE
+    MOVIE,
 }
-
 
 export interface TvResult {
     id: number;

@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
-import { TvSubscription } from "./tv-subscription.entity";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { TvSubscription } from './tv-subscription.entity';
 
 @Entity()
 export class TvEpisode {
@@ -20,7 +20,7 @@ export class TvEpisode {
 
     @Column()
     airDate: string;
-    
+
     @Column()
     inPlex: boolean;
 
@@ -33,5 +33,5 @@ export enum ItiLinkStatus {
     UNKNOWN,
     FOUND,
     NOTFOUND,
-    ERROR
+    ERROR,
 }

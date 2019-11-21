@@ -1,15 +1,15 @@
-export interface tmdbEpisode {
-    air_date: string,
-    episode_number: number,
-    id: number,
-    name: string,
-    overview: string,
-    production_code: null,
-    season_number: number,
-    show_id: number,
-    still_path: string,
-    vote_average: number,
-    vote_count: number,
+export interface TmdbEpisode {
+    air_date: string;
+    episode_number: number;
+    id: number;
+    name: string;
+    overview: string;
+    production_code: null;
+    season_number: number;
+    show_id: number;
+    still_path: string;
+    vote_average: number;
+    vote_count: number;
     crew: [
         {
             id: number,
@@ -18,9 +18,9 @@ export interface tmdbEpisode {
             department: string,
             job: string,
             gender: number,
-            profile_path: null
-        }        
-    ],
+            profile_path: null,
+        }
+    ];
     guest_stars: [
         {
             id: number,
@@ -29,7 +29,7 @@ export interface tmdbEpisode {
             character: string,
             order: number,
             gender: number,
-            profile_path: string
-        }        
-    ]    
+            profile_path: string,
+        }
+    ];
 }

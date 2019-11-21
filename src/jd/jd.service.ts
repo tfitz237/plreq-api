@@ -1,20 +1,19 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
-import Configuration from '../shared/configuration';
-import { jdLink, jdConnectResponse, jdInit, jdPackage } from '../models/jdownloader';
+import Configuration from '../shared/configuration/configuration';
+import { JdLink, JdConnectResponse, JdInit, JdPackage } from '../models/jdownloader';
 import FileService from './file.service';
 import { WsGateway } from '../ws/ws.gateway';
-import { Logger, LogMe } from '../shared/log.service';
-import { LogLevel } from '../shared/log.entry.entity';
+import { Logger, LogMe } from '../shared/log/log.service';
+import { LogLevel } from '../shared/log/log.entry.entity';
 import { ItiService } from '../iti/iti.service';
 import { resolve } from 'url';
-import { JSONtryParse } from '../shared/functions';
 @Injectable()
 export class JdService extends LogMe {
     isConnected: boolean = false;
     deviceId: string;
-    links: jdLink[] = [];
-    packages: jdPackage[] = [];
+    links: JdLink[] = [];
+    packages: JdPackage[] = [];
     pollPackages: boolean = true;
     private socket: WsGateway;
     constructor(private readonly fileService: FileService,
@@ -29,7 +28,7 @@ export class JdService extends LogMe {
 
     get isInitiated(): boolean { return this.isConnected && !!this.deviceId; }
 
-    async connect(): Promise<jdConnectResponse> {
+    async connect(): Promise<JdConnectResponse> {
         try {
             const response = await jdApi.connect(this.config.jd.email, this.config.jd.password);
             if (response === true) {
@@ -44,12 +43,12 @@ export class JdService extends LogMe {
         catch (response) {
             throw new HttpException({
                 connected: false,
-                error: (response.error && response.error.src) ? response.error : JSONtryParse(response.error),
+                error: (response.error && response.error.src) ? response.error : JSON.parse(response.error),
             }, 400);
         }
     }
 
-    async initiate(): Promise<jdInit> {
+    async initiate(): Promise<JdInit> {
         if (this.isInitiated) {
             return {
                 id: this.deviceId,
@@ -68,7 +67,7 @@ export class JdService extends LogMe {
         }
         const deviceId = await this.listDevices();
         if (deviceId) {
-            const packages =  (await this.getPackages()) as jdPackage[];
+            const packages = (await this.getPackages()) as JdPackage[];
             await this.movePackages();
             if (this.pollPackages) {
                 this.setupPollingCache();
@@ -104,13 +103,12 @@ export class JdService extends LogMe {
         }, 60000);
     }
 
-    async movePackages(): Promise<jdInit> {
+    async movePackages(): Promise<JdInit> {
         this.checkForUnrar();
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
-            await this.logInfo(this.movePackages, 
-                `Moved videos: ${movedPackages.map(x => `${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName : 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`)}`);
+            await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x => `${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName : 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`)}`);
             if (movedPackages.length > 0) {
                 const cleaned = await this.cleanUp(movedPackages);
                 return cleaned;
@@ -134,18 +132,18 @@ export class JdService extends LogMe {
         if (this.finishedPackages.length > 0) {
             if (stopOnExtracted) {
                 const extracting = this.packages.filter(pack => pack.status && pack.status.includes('Extracting'));
-                return extracting.length == 0;
+                return extracting.length === 0;
             }
             return true;
         }
     }
 
-    async cleanUp(finished: jdPackage[] = this.finishedPackages): Promise<jdInit> {
+    async cleanUp(finished: JdPackage[] = this.finishedPackages): Promise<JdInit> {
         try {
             await this.logInfo(this.cleanUp, `Cleaning up ${finished.length} packages named: ${finished.map(x => x.name).join(', ')}`);
             let result = await jdApi.cleanUp(this.deviceId, finished.map(x => x.uuid));
-            const packages = await this.getPackages(false, null, false) as jdPackage[];
-            if (packages.length == 0) {
+            const packages = await this.getPackages(false, null, false) as JdPackage[];
+            if (packages.length === 0) {
                 result = result && this.fileService.cleanUp();
             }
             if (result) {
@@ -161,13 +159,13 @@ export class JdService extends LogMe {
         }
     }
 
-    async removePackage(pkg: jdPackage): Promise<jdInit> {
+    async removePackage(pkg: JdPackage): Promise<JdInit> {
         try {
             await this.logInfo(this.removePackage, `Removing download package named: ${pkg.name}`);
             const result = await jdApi.cleanUp(this.deviceId, [pkg.uuid], 'DELETE_ALL');
-            const packages = await this.getPackages(false, null, false) as jdPackage[];
+            const packages = await this.getPackages(false, null, false) as JdPackage[];
             return {
-                success: packages ? packages.findIndex(x => x.uuid == pkg.uuid) == -1 : false,
+                success: packages ? packages.findIndex(x => x.uuid === pkg.uuid) === -1 : false,
             };
         } catch (e) {
             console.error(e);
@@ -195,7 +193,7 @@ export class JdService extends LogMe {
 
     }
 
-    private async getLinks(): Promise<jdLink[]> {
+    private async getLinks(): Promise<JdLink[]> {
         const response = await this.initiate();
         if (response.success) {
             try {
@@ -211,7 +209,7 @@ export class JdService extends LogMe {
         return [];
     }
 
-    async getPackages(cachedLinks: boolean = false, uuids: string = null, cachedPackages: boolean = true): Promise<jdPackage[]|jdPackage|jdInit> {
+    async getPackages(cachedLinks: boolean = false, uuids: string = null, cachedPackages: boolean = true): Promise<JdPackage[]|JdPackage|JdInit> {
         if (cachedPackages && this.packages.length > 0) {
             return this.packages;
         }
@@ -234,7 +232,7 @@ export class JdService extends LogMe {
                     const pck = await jdApi.queryPackages(this.deviceId, packages);
                     pck.data.forEach(p => {
                         p = this.addPackageDetails(p);
-                        const pa = this.packages.find(x => x.uuid == p.uuid);
+                        const pa = this.packages.find(x => x.uuid === p.uuid);
                         if (pa) {
                             Object.assign(pa, p);
                         } else {
@@ -243,13 +241,13 @@ export class JdService extends LogMe {
 
                     });
                     this.packages.forEach((pac, idx) => {
-                        const a = pck.data.findIndex(x => x.uuid == pac.uuid);
-                        if (a == -1) {
+                        const a = pck.data.findIndex(x => x.uuid === pac.uuid);
+                        if (a === -1) {
                             this.packages.splice(idx, 1);
                         }
                     });
 
-                    if (pck.data.length == 1) {
+                    if (pck.data.length === 1) {
                         return pck.data[0];
                     }
                     return pck.data;
@@ -270,14 +268,14 @@ export class JdService extends LogMe {
     }
 
     private async checkForUnrar() {
-        return new Promise<boolean>(async (resolve, reject) => {
+        return new Promise<boolean>(async (res) => {
             for (let i = 0; i < this.packages.length; i++) {
                 const pack = this.packages[i];
                 if (!pack.forceExtraction && pack.status && pack.status.includes('Extraction error')) {
                     pack.forceExtraction = true;
                     pack.status = 'Forcing Extraction...';
                     Object.assign(this.packages[i], pack);
-                    resolve(true);
+                    res(true);
                     const extraction = await this.fileService.unrar(pack);
                     if (extraction) {
                         pack.forceExtraction = false;
@@ -290,7 +288,7 @@ export class JdService extends LogMe {
         });
     }
 
-    private addPackageDetails(pack: jdPackage) {
+    private addPackageDetails(pack: JdPackage) {
         try {
             pack.progressPercent = Math.round(pack.bytesLoaded / pack.bytesTotal * 10000) / 100;
             pack.speedInMb = Math.round(pack.speed / 10000) / 100;
@@ -308,8 +306,8 @@ export class JdService extends LogMe {
                 const match = pack.status.match(/Extracting \(ETA: ((\d+)?m?:?(\d+)s)\).*/);
                 if (match) {
                     pack.progress.extraction = match[1];
-                    const sec = parseInt(match[2]) * 60 + parseInt(match[3]);
-                    pack.extractionProgress = sec;
+                    const secs = parseInt(match[2]) * 60 + parseInt(match[3]);
+                    pack.extractionProgress = secs;
                 }
             }
             if (pack.forceExtraction && pack.status && pack.status.includes('Extraction Error')) {
@@ -324,12 +322,12 @@ export class JdService extends LogMe {
 
     }
 
-    async addLinks(linkId: string, packageName: string): Promise<jdInit> {
+    async addLinks(linkId: string, packageName: string): Promise<JdInit> {
         const response = await this.initiate();
         if (response.success) {
-            const packageExists = (await this.getPackages(false, null, false) as jdPackage[]) || [];
+            const packageExists = (await this.getPackages(false, null, false) as JdPackage[]) || [];
             if (packageExists && packageExists.length) {
-                if (packageExists.find(x => x.name == packageName)) {
+                if (packageExists.find(x => x.name === packageName)) {
                     return {
                         success: false,
                         error: {
@@ -359,4 +357,3 @@ export class JdService extends LogMe {
     }
 
 }
-

@@ -2,10 +2,10 @@ import * as fs from 'fs-extra';
 import * as parse from 'parse-torrent-name';
 import { Injectable } from '@nestjs/common';
 import * as path from 'path';
-import Configuration from '../shared/configuration';
+import Configuration from '../shared/configuration/configuration';
 import * as rimraf from 'rimraf';
 import { WsGateway } from '../ws/ws.gateway';
-import { jdPackage } from '../models/jdownloader';
+import { JdPackage } from '../models/jdownloader';
 
 import {spawn} from 'child_process';
 
@@ -19,7 +19,7 @@ export default class FileService {
     constructor(private readonly config: Configuration) {
         this.setConfiguration();
     }
-    
+
     setConfiguration() {
         this.dir = this.config.filePaths.dir;
         this.tvDestination = this.config.filePaths.tvDestination;
@@ -29,20 +29,19 @@ export default class FileService {
     setSocket(socket: WsGateway) {
         this.socket = socket;
     }
-    
 
-    async unrar(pkg: jdPackage): Promise<boolean> {
+    async unrar(pkg: JdPackage): Promise<boolean> {
         const packages = this.findRars([pkg]);
         pkg = packages[0];
         return new Promise<boolean>((res, rej) => {
 
             try {
                 const result = spawn(
-                    'bash', 
-                    ['/media/strong/User/Projects/plreq-api/unrar.sh', pkg.files[0].fullDirectoryName], 
+                    'bash',
+                    ['/media/strong/User/Projects/plreq-api/unrar.sh', pkg.files[0].fullDirectoryName],
                     {
-                        cwd: '/media/large/User/Downloads'
-                    }
+                        cwd: '/media/large/User/Downloads',
+                    },
                     );
                 let resultString = '';
                 result.stdout.on('data', data => resultString += data.toString());
@@ -50,7 +49,7 @@ export default class FileService {
 
                 result.on('close', () => {
                     console.log(resultString);
-                    res(resultString.includes('Success'))
+                    res(resultString.includes('Success'));
                 });
             }
             catch (e) {
@@ -60,19 +59,19 @@ export default class FileService {
         });
     }
 
-    async moveVideos(packages: jdPackage[] = []): Promise<[boolean, jdPackage[]]> {  
+    async moveVideos(packages: JdPackage[] = []): Promise<[boolean, JdPackage[]]> {
         packages = this.findVideos(packages);
-        let moved = false;
-        for(var j in packages) {
-            for (var i in packages[j].files) {
-                var file = packages[j].files[i];
+        const moved = false;
+        for (const j in packages) {
+            for (const i in packages[j].files) {
+                const file = packages[j].files[i];
                 if (file) {
-                    var name = this.parseName(file.fileName);
+                    const name = this.parseName(file.fileName);
                     let dir;
                     let dest;
                     if (name.isTv) {
                         dir = path.join(this.tvDestination, name.title);
-                        await fs.ensureDir(dir);                    
+                        await fs.ensureDir(dir);
                         dest = path.join(dir, file.fileName);
                     } else {
                         dir = this.movieDestination;
@@ -81,18 +80,18 @@ export default class FileService {
                     try {
 
                         packages[j].files[i].destination = dest;
-                        
+
                         if (!file.moved) {
                             await fs.move(file.fullPath, dest, { overwrite: true});
                             packages[j].files[i].moved = true;
                             console.log(`moved ${file.fileName} to ${dest}`);
                         }
-                    } catch(err) {
+                    } catch (err) {
                         console.error(err);
                         return [false, packages];
                     }
                 }
-            }     
+            }
         }
 
         return [true, packages];
@@ -100,30 +99,30 @@ export default class FileService {
 
     async cleanUp(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
-            //rimraf(this.dir + '/*', () => resolve(true));
+            // rimraf(this.dir + '/*', () => resolve(true));
             resolve(true);
 	});
-        
+
     }
 
     parseName(fileName: string) {
         const parsed = parse(fileName);
-        let match = fileName.match(/.*\.(avi|AVI|wmv|WMV|flv|FLV|mpg|MPG|mp4|MP4|mkv|MKV|mpeg|MPEG)/);
+        const match = fileName.match(/.*\.(avi|AVI|wmv|WMV|flv|FLV|mpg|MPG|mp4|MP4|mkv|MKV|mpeg|MPEG)/);
         parsed.isArchive = fileName.match(/.*\.rar/) != null;
         parsed.isVideo = match != null;
         parsed.isTv = (parsed.season || parsed.episode) !== undefined;
         return parsed;
     }
 
-    private findVideos(packages: jdPackage[]) {
-        let files = this.getFiles().filter(f => 
-            this.parseName(f.fileName).isVideo
+    private findVideos(packages: JdPackage[]) {
+        const files = this.getFiles().filter(f =>
+            this.parseName(f.fileName).isVideo,
         );
         packages.forEach(p => {
             p.files = files.filter(x => {
                 let count = 0;
                 const words = x.directoryName.split(' ');
-                const threshold = Math.floor(words.length / 2); 
+                const threshold = Math.floor(words.length / 2);
                 words.forEach(word => {
                     if (p.name.includes(word)) {
                         count++;
@@ -137,15 +136,15 @@ export default class FileService {
         return packages;
     }
 
-    private findRars(packages: jdPackage[]) {
-        let files = this.getFiles().filter(f => 
-            this.parseName(f.fileName).isArchive
+    private findRars(packages: JdPackage[]) {
+        const files = this.getFiles().filter(f =>
+            this.parseName(f.fileName).isArchive,
         );
         packages.forEach(p => {
             p.files = files.filter(x => {
                 let count = 0;
                 const words = x.directoryName.split(' ');
-                const threshold = Math.floor(words.length / 2); 
+                const threshold = Math.floor(words.length / 2);
                 words.forEach(word => {
                     if (p.name.includes(word)) {
                         count++;
@@ -160,9 +159,9 @@ export default class FileService {
     }
 
     private getFiles(dir = this.dir, files_: File[] = []){
-        var files = fs.readdirSync(dir);
-        for (var i in files){
-            var name = dir + '/' + files[i];
+        const files = fs.readdirSync(dir);
+        for (const i in files){
+            const name = dir + '/' + files[i];
             if (fs.statSync(name).isDirectory()){
                 this.getFiles(name, files_);
             } else {
@@ -172,13 +171,12 @@ export default class FileService {
                     fullPath: name,
                     directoryName: dirs[dirs.length - 1].replace(/[\-_\[\]\(\)]+/, ''),
                     fullDirectoryName: dirs[dirs.length - 1],
-                    moved: false
+                    moved: false,
                 });
             }
         }
         return files_;
     }
-
 
 }
 
