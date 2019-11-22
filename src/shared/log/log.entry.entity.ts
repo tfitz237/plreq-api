@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class LogEntry {
@@ -20,8 +20,7 @@ export class LogEntry {
     @Column({nullable: true})
     exception: string;
 
-} 
-
+}
 
 export enum LogLevel {
     TRACE,
@@ -29,5 +28,5 @@ export enum LogLevel {
     INFORMATION,
     WARNING,
     ERROR,
-    FATAL
+    FATAL,
 }

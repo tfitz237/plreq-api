@@ -1,8 +1,7 @@
-import { Injectable, Optional } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { LogEntry, LogLevel } from "./log.entry.entity";
-import { Repository } from "typeorm";
-
+import { Injectable, Optional } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { LogEntry, LogLevel } from './log.entry.entity';
 
 @Injectable()
 export class Logger {
@@ -13,9 +12,7 @@ export class Logger {
     ) {
     }
 
-
     private async logEntry(logger: string, entrance: string, level: LogLevel, message: string, exception: string = null) {
-        
 
         const logEntry = new LogEntry();
         logEntry.created = Date.now();
@@ -24,15 +21,14 @@ export class Logger {
         logEntry.exception = exception;
         logEntry.logger = `${logger}.${entrance}()`;
         console.log(JSON.stringify(logEntry));
-        await this.logger.save(logEntry)
+        await this.logger.save(logEntry);
     }
 
     public async log(logger: string, entrance: any, level: LogLevel, message: string, exception: string = null) {
-        return await this.logEntry(logger, entrance,level,message,exception);
+        return await this.logEntry(logger, entrance, level, message, exception);
     }
 
 }
-
 
 export class LogMe {
     private logger: Logger;
