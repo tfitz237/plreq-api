@@ -1,8 +1,8 @@
-import { Controller, Get, Param, UseGuards, Post, Body } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { JdConnectResponse, JdInit, JdPackage } from 'models/jdownloader';
+import { Roles, RolesGuard } from '../auth/auth.roles';
+import { UserLevel } from '../shared/constants';
 import { JdService } from './jd.service';
-import { jdConnectResponse, jdInit, jdPackage } from "models/jdownloader";
-import { RolesGuard, Roles } from '../auth/auth.roles';
-import { UserLevel } from '../auth/auth.service';
 
 @UseGuards(RolesGuard)
 @Controller('jd')
@@ -11,31 +11,31 @@ export class JdController {
 
     @Roles(UserLevel.User)
     @Get('packages/:uuid')
-    async  package(@Param('uuid') uuid): Promise<jdPackage|jdInit> {
-        return await this.jdService.getPackages(true, uuid) as jdPackage|jdInit;
+    async  package(@Param('uuid') uuid): Promise<JdPackage|JdInit> {
+        return await this.jdService.getPackages(true, uuid) as JdPackage|JdInit;
     }
 
     @Roles(UserLevel.User)
     @Get('packages')
-    async packages(): Promise<jdPackage[]|jdInit> {
-        return await this.jdService.getPackages(true) as jdPackage[]|jdInit;
+    async packages(): Promise<JdPackage[]|JdInit> {
+        return await this.jdService.getPackages(true) as JdPackage[]|JdInit;
     }
 
     @Roles(UserLevel.User)
     @Post('add-links')
-    async addLinks(@Body() request: any): Promise<jdInit> {
+    async addLinks(@Body() request: any): Promise<JdInit> {
         return await this.jdService.addLinks(request.linkId, request.name);
     }
 
     @Roles(UserLevel.Admin)
     @Get('clean-up')
-    async cleanUp(): Promise<jdInit> {
+    async cleanUp(): Promise<JdInit> {
         return await this.jdService.cleanUp();
     }
 
     @Roles(UserLevel.User)
     @Post('remove-package')
-    async removePackage(@Body() body): Promise<jdInit> {
+    async removePackage(@Body() body): Promise<JdInit> {
         return await this.jdService.removePackage(body);
     }
 

@@ -1,22 +1,22 @@
-import { Error } from './status';
 import { File} from '../jd/file.service';
-export interface jdConnectResponse {
+import { Error } from './status';
+export interface JdConnectResponse {
     connected: boolean;
     error?: Error;
 }
-export interface jdInit {
+export interface JdInit {
     id?: string;
     success: boolean;
     error?: Error;
-    packages?: jdPackage[];
+    packages?: JdPackage[];
 }
 
-export interface jdLink {
+export interface JdLink {
     name: string;
     packageUUID: number;
     uuid: number;
 }
-export interface jdPackage {
+export interface JdPackage {
     bytesLoaded: number;
     name: string;
     finished: boolean;
@@ -29,12 +29,12 @@ export interface jdPackage {
     bytesTotal: number;
     extracting?: boolean;
     forceExtraction?: boolean;
-    extractionProgress?: number;   
+    extractionProgress?: number;
     progress: {
         percent: string;
         eta: string;
         extraction?: string;
         speedInMb: string;
-    },
-    files: File[]
+    };
+    files: File[];
 }

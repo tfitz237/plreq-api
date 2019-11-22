@@ -1,7 +1,7 @@
-import { Controller, UseGuards, Post, Body } from '@nestjs/common';
-import { RolesGuard, Roles } from '../auth/auth.roles';
-import { UserLevel } from '../auth/auth.service';
-import { itiTvShowQuery } from '../models/iti';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Roles, RolesGuard } from '../auth/auth.roles';
+import { ItiTvShowQuery } from '../models/iti';
+import { UserLevel } from '../shared/constants';
 import { TmdbService } from './tmdb.service';
 
 @UseGuards(RolesGuard)
@@ -12,7 +12,7 @@ export class TmdbController {
 
     @Roles(UserLevel.User)
     @Post('tv')
-    async searchForShow(@Body() request: itiTvShowQuery): Promise<any> {
+    async searchForShow(@Body() request: ItiTvShowQuery): Promise<any> {
         if (request.id) {
             return await this.tmdbService.getShowSeasons(request.id);
         }
@@ -21,7 +21,7 @@ export class TmdbController {
 
     @Roles(UserLevel.User)
     @Post('movie')
-    async searchForMovie(@Body() request: itiTvShowQuery): Promise<any> {
+    async searchForMovie(@Body() request: ItiTvShowQuery): Promise<any> {
         if (request.id) {
             return await this.tmdbService.getMovie(request.id);
         }

@@ -1,10 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ReflectMetadata } from '@nestjs/common';
-import { UserLevel } from './auth.service';
+import { IUser } from '../models/user';
+import { UserLevel } from '../shared/constants';
 import {JwtStrategy} from './jwt.strategy';
-import { iUser } from '../models/user';
-export const Roles = (...roles: UserLevel[]) => ReflectMetadata('roles', roles);
+export const Roles = (...roles: UserLevel[]) => SetMetadata('roles', roles);
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,8 +18,8 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     if (request.headers.authorization) {
         const verify = await this.jwtStrategy.verifyJwt(request.headers.authorization.split(' ')[1]);
-        if (verify !== false) {        
-            const user = verify as iUser;
+        if (verify !== false) {
+            const user = verify as IUser;
             return user.level >= roles[0];
         }
     }

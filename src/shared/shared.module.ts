@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
-import Configuration from './configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LogEntry } from './log.entry.entity';
-import { Logger } from './log.service';
+import Configurations from './configuration/configuration.entity';
+import ConfigurationService from './configuration/configuration.service';
+import { LogEntry } from './log/log.entry.entity';
+import { Logger } from './log/log.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([LogEntry])],
-    providers: [Configuration, Logger],
-    exports: [Configuration, Logger]
+    imports: [TypeOrmModule.forFeature([LogEntry, Configurations])],
+    providers: [ConfigurationService, Logger],
+    exports: [ConfigurationService, Logger],
 })
 export class SharedModule {}
