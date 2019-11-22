@@ -43,7 +43,7 @@ export class SubscriptionsService extends LogMe{
         private readonly plexDb: PlexDb,
     ) {
         super(logService);
-        this.setupPolling();
+        //this.setupPolling();
     }
 
     async setupPolling() {
