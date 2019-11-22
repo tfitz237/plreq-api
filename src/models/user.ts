@@ -3,4 +3,5 @@ export interface iUser {
     password: string;
     userGuid: string;
     level: number;
+    emailVerified: boolean;
 }

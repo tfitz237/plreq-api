@@ -21,7 +21,8 @@ export class AuthService {
     users: iUser[];
     constructor(private readonly jwtService: JwtService, 
         private readonly config: Configuration,
-        @InjectRepository(User) private readonly userRepo: Repository<User>
+        @InjectRepository(User) 
+        private readonly userRepo: Repository<User>
         ) {
     }
 
@@ -36,20 +37,32 @@ export class AuthService {
     async requestToken(inputUser: iUser): Promise<string> {
         const user = await this.userRepo.findOne({ username: inputUser.username}); 
         const verified = user ? pwHash.verify(inputUser.password, user.password) : false;
-        return Promise.resolve(verified ? this.jwtService.sign({ userGuid: user.userGuid, username: user.username, level: user.level }) : null);
+        return verified ? this.jwtService.sign({ userGuid: user.userGuid, username: user.username, level: user.level }) : null;
+    }
+
+    requestEmailToken(user: User) {
+        return this.jwtService.sign({username: user.username}, { expiresIn: '1h'})
     }
 
     async createUser(payload: iUser) {
         const user = await this.userRepo.findOne({userGuid: payload.userGuid});
-        if (user && !user.username && !user.password){ 
+        if (user && this.isValidEmail(user.username) && !user.password){ 
             user.password = pwHash.generate(payload.password);
             user.level = UserLevel.User;
             user.username = payload.username;
+            user.emailVerified = false;
             const success = await this.userRepo.save(user);
             return !!success;
         }
 
         return false; 
+    }
+
+    //Only need to check for basics (@ symbol and period) because sending an email verification 
+    //will be the check to see if the email exists
+    isValidEmail(email: string): boolean {
+        let regEx = /.+@\w+\.\w+/;
+        return regEx.test(email);
     }
 }
 

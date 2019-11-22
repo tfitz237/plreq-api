@@ -17,4 +17,7 @@ export class User {
 
     @Column()
     level: UserLevel;
+
+    @Column()
+    emailVerified: boolean;
 }

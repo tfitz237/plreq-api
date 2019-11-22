@@ -9,6 +9,8 @@ import { TypeOrmModule} from '@nestjs/typeorm';
 import { PlexModule } from './plex/plex.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TmdbModule } from './tmdb/tmdb.module';
+import { EmailService } from './email/email.service';
+import { EmailModule } from './email/email.module';
 @Module({
   imports: [ 
     TypeOrmModule.forRoot(),
@@ -19,8 +21,9 @@ import { TmdbModule } from './tmdb/tmdb.module';
     WsModule, 
     PlexModule, 
     SubscriptionsModule, 
-    TmdbModule
+    TmdbModule, EmailModule
   ],
   controllers: [AppController],
+  providers: [EmailService],
 })
 export class AppModule {}
