@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  api:
+    build: .
+    command: npm run start
+    volumes: 
+      - .:/workspaces/plreq-api
+      - /workspaces/plreq-api/node_modules
+    ports:
+      - "32465:32465"
