@@ -30,12 +30,16 @@ export class ItiService extends LogMe {
                         s: (retry * 50) + 1,
                         p: request.parent,
                         c: request.child,
+                        o: "null",
+                        what: "null",
+                        series: "null",
                     },
                     headers: {
                         Cookie: this.cookie,
                     },
                 });
                 const searchResults = result.data;
+                searchResults.shift();
                 if (searchResults && searchResults.length > 0) {
                     const filtered = searchResults.filter(link => this.filterSearchResult(link, request.query));
                     results = results.concat(filtered);
