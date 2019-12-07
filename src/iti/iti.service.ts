@@ -40,6 +40,7 @@ export class ItiService extends LogMe {
                 });
                 const searchResults = result.data;
                 searchResults.shift();
+                searchResults.shift();
                 if (searchResults && searchResults.length > 0) {
                     const filtered = searchResults.filter(link => this.filterSearchResult(link, request.query));
                     results = results.concat(filtered);
