@@ -6,7 +6,7 @@ import * as rimraf from 'rimraf';
 import { JdPackage } from '../models/jdownloader';
 import { WsGateway } from '../ws/ws.gateway';
 
-import {spawn} from 'child_process';
+import {spawn, execFile, exec} from 'child_process';
 import { IConfiguration } from '../models/config';
 import ConfigurationService from '../shared/configuration/configuration.service';
 
@@ -33,24 +33,19 @@ export default class FileService {
         return new Promise<boolean>((res, rej) => {
 
             try {
-                const result = spawn(
-                    'bash',
-                    [
-                        './unrar.sh',
-                        pkg.files[0].fullDirectoryName,
-                    ],
-                    {
-                        cwd: this.config.filePaths.dir,
-                    },
-                    );
-                let resultString = '';
-                result.stdout.on('data', data => resultString += data.toString());
-                result.stderr.on('data', data => resultString += data.toString());
-
-                result.on('close', () => {
-                    console.log(resultString);
-                    res(resultString.includes('Success'));
+                const file = './unrar.sh';
+                const workingDir = path.resolve(__dirname, '../..');
+                const result = exec(`bash ${file} "${pkg.files[0].fullDirectoryName}" "${this.config.filePaths.dir}" "${workingDir}/password.txt"`, { cwd: workingDir  }, (err, stdout, stderr) => {
+                    if (!err) {
+                        const resultString = stdout + stderr;
+                        console.log(resultString);
+                        res(resultString.includes('Success'));
+                    } else {
+                        console.log(err);
+                        res(false);
+                    }
                 });
+
             }
             catch (e) {
                 console.log(e);
