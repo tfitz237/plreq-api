@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import Configurations from './configuration.entity';
 import { IConfiguration } from '../../models/config';
 import { JSONtryParse } from '../functions';
-import { InjectRepository } from '@nestjs/typeorm';
+import Configurations from './configuration.entity';
 // tslint:disable-next-line: no-var-requires
 const merge = require('deepmerge');
 

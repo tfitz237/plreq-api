@@ -3,9 +3,9 @@ import axios from 'axios';
 import { ItiError, ItiLink, ItiLinkResponse, ItiQuery } from '../models/iti';
 import ConfigurationService from '../shared/configuration/configuration.service';
 import { LogLevel } from '../shared/log/log.entry.entity';
-import { Logger, LogMe } from '../shared/log/log.service';
+import { Logger } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
-
+import { LogMe } from '../shared/log/logme';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
 export class ItiService extends LogMe {
@@ -30,9 +30,9 @@ export class ItiService extends LogMe {
                         s: (retry * 50) + 1,
                         p: request.parent,
                         c: request.child,
-                        o: "null",
-                        what: "null",
-                        series: "null",
+                        o: 'null',
+                        what: 'null',
+                        series: 'null',
                     },
                     headers: {
                         Cookie: this.cookie,
@@ -48,7 +48,7 @@ export class ItiService extends LogMe {
                         return this.search(request, ++retry, results);
                     }
                 }
-                this.log(this.search, LogLevel.INFORMATION, `Query: ${request}. Found ${results.length} filtered results`);
+                this.log(this.search, LogLevel.INFORMATION, `Query: ${JSON.stringify(request)}. Found ${results.length} filtered results`);
                 return {
                     page: retry,
                     results,

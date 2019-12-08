@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { AuthModule } from '../auth/auth.module';
+import { RolesGuard } from '../auth/auth.roles';
 import { ItiController } from './iti.controller';
 import { ItiService } from './iti.service';
 
@@ -7,8 +9,8 @@ describe('Iti Controller', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       controllers: [ItiController],
-      providers: [ItiService],
-    }).compile();
+      providers: [{provide: ItiService, useValue: {}}],
+    }).overrideGuard(RolesGuard).useValue({canActivate: () => true}).compile();
   });
   it('should be defined', () => {
     const controller: ItiController = module.get<ItiController>(ItiController);
