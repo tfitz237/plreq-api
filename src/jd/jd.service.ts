@@ -1,23 +1,36 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
 import { resolve } from 'url';
+import { CronService } from '../cron/cron.service';
 import { ItiService } from '../iti/iti.service';
 import { JdConnectResponse, JdInit, JdLink, JdPackage } from '../models/jdownloader';
 import ConfigurationService from '../shared/configuration/configuration.service';
+import { JSONtryParse } from '../shared/functions';
 import { LogLevel } from '../shared/log/log.entry.entity';
-import { Logger, LogMe } from '../shared/log/log.service';
+import { Logger } from '../shared/log/log.service';
+import { LogMe } from '../shared/log/logme';
 import { WsGateway } from '../ws/ws.gateway';
 import FileService from './file.service';
 @Injectable()
 export class JdService extends LogMe {
+
+    get isInitiated(): boolean { return this.isConnected && !!this.deviceId; }
+
+    private get finishedPackages() {
+        return this.packages.filter(pack => pack.finished && pack.status && pack.status.includes('Extraction OK'));
+    }
     isConnected: boolean = false;
     deviceId: string;
     links: JdLink[] = [];
     packages: JdPackage[] = [];
-    pollPackages: boolean = true;
+    cronId: number;
+    moveCronId: number;
     private socket: WsGateway;
     constructor(private readonly fileService: FileService,
-                private readonly configService: ConfigurationService, private readonly logService: Logger, private readonly itiService: ItiService) {
+                private readonly configService: ConfigurationService,
+                private readonly logService: Logger,
+                private readonly itiService: ItiService,
+                private readonly cronService: CronService) {
             super(logService);
     }
 
@@ -26,31 +39,8 @@ export class JdService extends LogMe {
         this.initiate();
     }
 
-    get isInitiated(): boolean { return this.isConnected && !!this.deviceId; }
-
     async config() {
         return await this.configService.getConfig();
-    }
-
-    async connect(): Promise<JdConnectResponse> {
-        try {
-            const config = await this.config();
-            const response = await jdApi.connect(config.jd.email, config.jd.password);
-            if (response === true) {
-                this.isConnected = true;
-                return {
-                    connected: true,
-                };
-            } else {
-                throw response;
-            }
-        }
-        catch (response) {
-            throw new HttpException({
-                connected: false,
-                error: (response.error && response.error.src) ? response.error : JSON.parse(response.error),
-            }, 400);
-        }
     }
 
     async initiate(): Promise<JdInit> {
@@ -74,7 +64,7 @@ export class JdService extends LogMe {
         if (deviceId) {
             const packages = (await this.getPackages()) as JdPackage[];
             await this.movePackages();
-            if (this.pollPackages) {
+            if (this.cronId === undefined) {
                 this.setupPollingCache();
             }
             await this.logInfo(this.initiate, 'Initated connection with Jdownloader');
@@ -96,16 +86,25 @@ export class JdService extends LogMe {
 
     }
 
-    private setupPollingCache() {
-        this.pollPackages = false;
-        setInterval(async () => {
-            await this.getPackages(false, null, false);
-            if (this.socket && this.socket.server)
-                this.socket.server.to(this.socket.authorizedGuid).emit('packages', this.packages);
-        }, 2000);
-        setInterval(async () => {
-            await this.movePackages();
-        }, 60000);
+    async connect(): Promise<JdConnectResponse> {
+        try {
+            const config = await this.config();
+            const response = await jdApi.connect(config.jd.email, config.jd.password);
+            if (response === true) {
+                this.isConnected = true;
+                return {
+                    connected: true,
+                };
+            } else {
+                throw response;
+            }
+        }
+        catch (response) {
+            throw new HttpException({
+                connected: false,
+                error: (response.error && response.error.src) ? response.error : JSONtryParse(response.error),
+            }, 400);
+        }
     }
 
     async movePackages(): Promise<JdInit> {
@@ -129,20 +128,6 @@ export class JdService extends LogMe {
         return {
             success: false,
         };
-    }
-
-    private get finishedPackages() {
-        return this.packages.filter(pack => pack.finished && pack.status && pack.status.includes('Extraction OK'));
-    }
-
-    private anyPackagesFinished(stopOnExtracted: boolean): boolean {
-        if (this.finishedPackages.length > 0) {
-            if (stopOnExtracted) {
-                const extracting = this.packages.filter(pack => pack.status && pack.status.includes('Extracting'));
-                return extracting.length === 0;
-            }
-            return true;
-        }
     }
 
     async cleanUp(finished: JdPackage[] = this.finishedPackages): Promise<JdInit> {
@@ -180,40 +165,6 @@ export class JdService extends LogMe {
                 success: false,
             };
         }
-    }
-
-    private async listDevices(): Promise<string> {
-        if (!this.deviceId) {
-            try {
-                const devices = await jdApi.listDevices();
-                if (devices.length > 0) {
-                    this.deviceId = devices[0].id;
-                    return devices[0].id;
-                }
-            }
-            catch {}
-            return null;
-
-        } else {
-            return this.deviceId;
-        }
-
-    }
-
-    private async getLinks(): Promise<JdLink[]> {
-        const response = await this.initiate();
-        if (response.success) {
-            try {
-                const links = await jdApi.queryLinks(this.deviceId);
-                this.links = links.data;
-                return links.data;
-            }
-            catch (e) {
-
-                await this.logError(this.getLinks, 'Could not retrieve links', e);
-            }
-        }
-        return [];
     }
 
     async getPackages(cachedLinks: boolean = false, uuids: string = null, cachedPackages: boolean = true): Promise<JdPackage[]|JdPackage|JdInit> {
@@ -274,6 +225,114 @@ export class JdService extends LogMe {
         }
     }
 
+    async addLinks(linkId: string, packageName: string): Promise<JdInit> {
+        const response = await this.initiate();
+        if (response.success) {
+            const packageExists = (await this.getPackages(false, null, false) as JdPackage[]) || [];
+            if (packageExists && packageExists.length) {
+                if (packageExists.find(x => x.name === packageName)) {
+                    return {
+                        success: false,
+                        error: {
+                            src: 'JD',
+                            type: 'Package already exists',
+                        },
+                    };
+                }
+            }
+            const links = await this.itiService.getLinks(linkId);
+            let resp;
+            try {
+                const linksString = links.join(' ');
+                resp = await jdApi.addLinks(linksString, this.deviceId, packageName);
+                await this.logInfo(this.addLinks, `Added ${links.length} links under the name ${packageName}`);
+                return { success: true};
+            } catch (e) {
+                await this.logError(this.addLinks, `Error adding links`, e.error);
+                throw new HttpException({
+                    success: false,
+                    error: e.error,
+                }, 400);
+            }
+        } else {
+            throw new HttpException(response, 400);
+        }
+    }
+
+    async cronJob() {
+        await this.getPackages(false, null, false);
+        if (this.socket && this.socket.server) {
+            this.socket.server.to(this.socket.authorizedGuid).emit('packages', this.packages);
+        }
+    }
+
+    private setupPollingCache() {
+        this.cronId = this.cronService.setup({
+            jobName: 'jd:get-packages',
+            description: 'Cache JDownloader packages and emit packages to socket',
+            interval: '*/2 * * * * *',
+            onTick: {
+                service: this,
+                methodName: 'cronJob',
+                parameters: [],
+            },
+        });
+        this.moveCronId = this.cronService.setup({
+            jobName: 'jd:move-packages',
+            description: 'Move Finished JDownloader Packages to given directory',
+            interval: '0 * * * *',
+            onTick: {
+                service: this,
+                methodName: 'movePackages',
+                parameters: [],
+            },
+        });
+    }
+
+    private anyPackagesFinished(stopOnExtracted: boolean): boolean {
+        if (this.finishedPackages.length > 0) {
+            if (stopOnExtracted) {
+                const extracting = this.packages.filter(pack => pack.status && pack.status.includes('Extracting'));
+                return extracting.length === 0;
+            }
+            return true;
+        }
+    }
+
+    private async listDevices(): Promise<string> {
+        if (!this.deviceId) {
+            try {
+                const devices = await jdApi.listDevices();
+                if (devices.length > 0) {
+                    this.deviceId = devices[0].id;
+                    return devices[0].id;
+                }
+            }
+            catch {}
+            return null;
+
+        } else {
+            return this.deviceId;
+        }
+
+    }
+
+    private async getLinks(): Promise<JdLink[]> {
+        const response = await this.initiate();
+        if (response.success) {
+            try {
+                const links = await jdApi.queryLinks(this.deviceId);
+                this.links = links.data;
+                return links.data;
+            }
+            catch (e) {
+
+                await this.logError(this.getLinks, 'Could not retrieve links', e);
+            }
+        }
+        return [];
+    }
+
     private async checkForUnrar() {
         return new Promise<boolean>(async (res) => {
             for (let i = 0; i < this.packages.length; i++) {
@@ -327,40 +386,6 @@ export class JdService extends LogMe {
             this.logError(this.addPackageDetails, 'error adding package details', e);
         }
 
-    }
-
-    async addLinks(linkId: string, packageName: string): Promise<JdInit> {
-        const response = await this.initiate();
-        if (response.success) {
-            const packageExists = (await this.getPackages(false, null, false) as JdPackage[]) || [];
-            if (packageExists && packageExists.length) {
-                if (packageExists.find(x => x.name === packageName)) {
-                    return {
-                        success: false,
-                        error: {
-                            src: 'JD',
-                            type: 'Package already exists',
-                        },
-                    };
-                }
-            }
-            const links = await this.itiService.getLinks(linkId);
-            let resp;
-            try {
-                const linksString = links.join(' ');
-                resp = await jdApi.addLinks(linksString, this.deviceId, packageName);
-                await this.logInfo(this.addLinks, `Added ${links.length} links under the name ${packageName}`);
-                return { success: true};
-            } catch (e) {
-                await this.logError(this.addLinks, `Error adding links`, e.error);
-                throw new HttpException({
-                    success: false,
-                    error: e.error,
-                }, 400);
-            }
-        } else {
-            throw new HttpException(response, 400);
-        }
     }
 
 }
