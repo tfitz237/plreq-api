@@ -1,7 +1,7 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
 	"name": "Node:LTS&TS + @nest/cli",
-	"dockerFile": "Dockerfile",
+	"dockerFile": "../Dockerfile",
 
 	// Uncomment the next line if you want to publish any ports.
 	"appPort": [32465],
