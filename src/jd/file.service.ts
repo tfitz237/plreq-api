@@ -12,9 +12,6 @@ import ConfigurationService from '../shared/configuration/configuration.service'
 
 @Injectable()
 export default class FileService {
-    dir: string;
-    tvDestination: string;
-    movieDestination: string;
     socket: WsGateway;
     config: IConfiguration;
     constructor(private readonly configService: ConfigurationService) {
@@ -23,9 +20,6 @@ export default class FileService {
 
     async setConfiguration() {
         this.config = await this.configService.getConfig();
-        this.dir = this.config.filePaths.dir;
-        this.tvDestination = this.config.filePaths.tvDestination;
-        this.movieDestination = this.config.filePaths.movieDestination;
     }
 
     setSocket(socket: WsGateway) {
@@ -33,16 +27,20 @@ export default class FileService {
     }
 
     async unrar(pkg: JdPackage): Promise<boolean> {
-        const packages = this.findRars([pkg]);
+        this.config = await this.configService.getConfig();
+        const packages = this.findRars(this.config.filePaths.dir, [pkg]);
         pkg = packages[0];
         return new Promise<boolean>((res, rej) => {
 
             try {
                 const result = spawn(
                     'bash',
-                    ['/media/strong/User/Projects/plreq-api/unrar.sh', pkg.files[0].fullDirectoryName],
+                    [
+                        './unrar.sh',
+                        pkg.files[0].fullDirectoryName,
+                    ],
                     {
-                        cwd: '/media/large/User/Downloads',
+                        cwd: this.config.filePaths.dir,
                     },
                     );
                 let resultString = '';
@@ -62,7 +60,8 @@ export default class FileService {
     }
 
     async moveVideos(packages: JdPackage[] = []): Promise<[boolean, JdPackage[]]> {
-        packages = this.findVideos(packages);
+        this.config = await this.configService.getConfig();
+        packages = this.findVideos(this.config.filePaths.dir, packages);
         const moved = false;
         for (const j in packages) {
             if (packages[j]) {
@@ -74,11 +73,11 @@ export default class FileService {
                             let dir;
                             let dest;
                             if (name.isTv) {
-                                dir = path.join(this.tvDestination, name.title);
+                                dir = path.join(this.config.filePaths.tvDestination, name.title);
                                 await fs.ensureDir(dir);
                                 dest = path.join(dir, file.fileName);
                             } else {
-                                dir = this.movieDestination;
+                                dir = this.config.filePaths.movieDestination;
                                 dest = path.join(dir, file.fileName);
                             }
                             try {
@@ -105,7 +104,7 @@ export default class FileService {
 
     async cleanUp(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
-            // rimraf(this.dir + '/*', () => resolve(true));
+            // rimraf(this.config.filePaths.dir + '/*', () => resolve(true));
             resolve(true);
 	});
 
@@ -120,8 +119,8 @@ export default class FileService {
         return parsed;
     }
 
-    private findVideos(packages: JdPackage[]) {
-        const files = this.getFiles().filter(f =>
+    private findVideos(filePath: string, packages: JdPackage[]) {
+        const files = this.getFiles(filePath).filter(f =>
             this.parseName(f.fileName).isVideo,
         );
         packages.forEach(p => {
@@ -142,8 +141,8 @@ export default class FileService {
         return packages;
     }
 
-    private findRars(packages: JdPackage[]) {
-        const files = this.getFiles().filter(f =>
+    private findRars(filePath: string, packages: JdPackage[]) {
+        const files = this.getFiles(filePath).filter(f =>
             this.parseName(f.fileName).isArchive,
         );
         packages.forEach(p => {
@@ -164,7 +163,7 @@ export default class FileService {
         return packages;
     }
 
-    private getFiles(dir = this.dir, files_: File[] = []){
+    private getFiles(dir, files_: File[] = []){
         const files = fs.readdirSync(dir);
         for (const i in files){
             if (files[i]) {
