@@ -1,14 +1,15 @@
-declare -a passwords=("soitgoes" "luelinks" "intotheinternet")
+passwords=($<./passwords.txt))
 
+directory=$1
 output=""
 result="Failure"
 for password in ${passwords[*]}; do
-    file=$(find "/media/large/User/Downloads/${1}" -name '*.rar' | sort | head -1)
-    echo "Extracting $file"
-    cd "$(dirname "$file")"
-    output=$(unrar x -p$password "$file")
-    if [[ $output =~ .*"All OK" ]]
-    then
+    files=$(find "./$directory" -name '*.rar' | sort)
+    echo "Extracting $files"
+    cd "$(dirname \"$files\")"
+
+    output=$(unrar x -p$password "$files")
+    if [[ $output =~ .*"All OK" ]]; then
         result="Success"
         break
     fi
