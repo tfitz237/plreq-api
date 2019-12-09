@@ -55,7 +55,7 @@ export class JdService extends LogMe {
         const response = !this.isConnected ? await this.connect() : {connected: true};
 
         if (!response.connected) {
-            this.logError(this.initiate, 'Could not connect to Jdownloader', response.error);
+            this.logError('initiate', 'Could not connect to Jdownloader', response.error);
             throw new HttpException({
                 success: false,
                 error: response.error,
@@ -68,14 +68,14 @@ export class JdService extends LogMe {
             if (this.cronId === undefined) {
                 this.setupPollingCache();
             }
-            await this.logInfo(this.initiate, 'Initated connection with Jdownloader');
+            await this.logInfo('initiate', 'Initated connection with Jdownloader');
             return {
                 id: deviceId,
                 success: true,
                 packages,
             };
         } else {
-            this.logError(this.initiate, 'No Jdownloader Devices found.');
+            this.logError('initiate'e, 'No Jdownloader Devices found.');
             throw new HttpException({
                 success: false,
                 error: {
@@ -113,7 +113,7 @@ export class JdService extends LogMe {
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
-            await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x =>
+            await this.logInfo('movePackages', `Moved videos: ${movedPackages.map(x =>
                     `${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName : 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`,
             )}`);
             if (movedPackages.length > 0) {
@@ -212,7 +212,7 @@ export class JdService extends LogMe {
                     return pck.data;
                 } catch {}
             }
-            await this.logError(this.getPackages, `Error finding packages`, null);
+            await this.logError('getPackages', `Error finding packages`, null);
             throw new HttpException({
                 success: false,
                 error: {
@@ -246,10 +246,10 @@ export class JdService extends LogMe {
             try {
                 const linksString = links.join(' ');
                 resp = await jdApi.addLinks(linksString, this.deviceId, packageName);
-                await this.logInfo(this.addLinks, `Added ${links.length} links under the name ${packageName}`);
+                await this.logInfo('addLinks', `Added ${links.length} links under the name ${packageName}`);
                 return { success: true};
             } catch (e) {
-                await this.logError(this.addLinks, `Error adding links`, e.error);
+                await this.logError('addLinks', `Error adding links`, e.error);
                 throw new HttpException({
                     success: false,
                     error: e.error,
@@ -328,7 +328,7 @@ export class JdService extends LogMe {
             }
             catch (e) {
 
-                await this.logError(this.getLinks, 'Could not retrieve links', e);
+                await this.logError('getLinks', 'Could not retrieve links', e);
             }
         }
         return [];
@@ -384,7 +384,7 @@ export class JdService extends LogMe {
             return pack;
         }
         catch (e) {
-            this.logError(this.addPackageDetails, 'error adding package details', e);
+            this.logError('addPackageDetails', 'error adding package details', e);
         }
 
     }
