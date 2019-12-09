@@ -11,6 +11,7 @@ import { Logger } from '../shared/log/log.service';
 import { LogMe } from '../shared/log/logme';
 import { WsGateway } from '../ws/ws.gateway';
 import FileService from './file.service';
+import { UserLevel } from '../shared/constants';
 @Injectable()
 export class JdService extends LogMe {
 
@@ -261,8 +262,8 @@ export class JdService extends LogMe {
 
     async cronJob() {
         await this.getPackages(false, null, false);
-        if (this.socket && this.socket.server) {
-            this.socket.server.to(this.socket.authorizedGuid).emit('packages', this.packages);
+        if (this.socket) {
+            this.socket.sendEvent('packages', this.packages, UserLevel.User);
         }
     }
 
@@ -280,7 +281,7 @@ export class JdService extends LogMe {
         this.moveCronId = this.cronService.setup({
             jobName: 'jd:move-packages',
             description: 'Move Finished JDownloader Packages to given directory',
-            interval: '0 * * * *',
+            interval: '0 * * * * *',
             onTick: {
                 service: this,
                 methodName: 'movePackages',
