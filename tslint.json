@@ -17,14 +17,11 @@
             false
         ],
         "ordered-imports": [
-            true
+            false
         ],
         "max-line-length": [
             true,
             200
-        ],
-        "member-ordering": [
-            true
         ],
         "curly": false,
         "interface-name": [

@@ -10,9 +10,10 @@ import { MovieSubscription } from './movie-subscription.entity';
 import { SubscriptionsController } from './subscriptions.controller';
 import { SubscriptionsService } from './subscriptions.service';
 import { TvSubscription } from './tv-subscription.entity';
+import { CronModule } from '../cron/cron.module';
 
 @Module({
-    imports: [ TypeOrmModule.forFeature([TvSubscription, MovieSubscription]), ItiModule, JdModule, AuthModule, SharedModule, PlexModule, TmdbModule],
+    imports: [ TypeOrmModule.forFeature([TvSubscription, MovieSubscription]), CronModule, ItiModule, JdModule, AuthModule, SharedModule, PlexModule, TmdbModule],
     providers: [SubscriptionsService],
     controllers: [SubscriptionsController],
 })

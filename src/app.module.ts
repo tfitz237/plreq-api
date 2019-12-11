@@ -2,8 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule} from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
-import { EmailModule } from './email/email.module';
-import { EmailService } from './email/email.service';
+import { CronModule } from './cron/cron.module';
 import { ItiModule } from './iti/iti.module';
 import { JdModule } from './jd/jd.module';
 import { PlexModule } from './plex/plex.module';
@@ -16,12 +15,13 @@ import { WsModule } from './ws/ws.module';
     TypeOrmModule.forRoot(),
     JdModule,
     AuthModule,
+    CronModule,
     ItiModule,
     SharedModule,
     WsModule,
     PlexModule,
     SubscriptionsModule,
-    TmdbModule, EmailModule,
+    TmdbModule,
   ],
   controllers: [AppController],
   providers: [EmailService],

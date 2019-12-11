@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CronService } from '../cron/cron.service';
 import { ItiService } from '../iti/iti.service';
 import { JdService } from '../jd/jd.service';
 import { ItiError, ItiLink, ItiLinkResponse } from '../models/iti';
 import PlexDb from '../plex/plex.db';
-import { Logger, LogMe } from '../shared/log/log.service';
+import { Logger } from '../shared/log/log.service';
+import { LogMe } from '../shared/log/logme';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MovieSubscription } from './movie-subscription.entity';
 import { ItiLinkStatus, TvEpisode } from './suscription.episode.entity';
@@ -14,7 +16,8 @@ import { TvSubscription } from './tv-subscription.entity';
 
 @Injectable()
 export class SubscriptionsService extends LogMe{
-
+    tvCronId: number;
+    movieCronId: number;
     tvSubscriptions: TvSubscription[] = [];
     movieSubscriptions: MovieSubscription[] = [];
 
@@ -41,17 +44,27 @@ export class SubscriptionsService extends LogMe{
         private readonly jdService: JdService,
         private readonly tmdbService: TmdbService,
         private readonly plexDb: PlexDb,
+        private readonly cronService: CronService,
     ) {
         super(logService);
         // this.setupPolling();
     }
 
+    async cronJob() {
+        this.checkTvSubscriptions().then(() => this.checkMovieSubscriptions());
+    }
+
     async setupPolling() {
-        await this.checkTvSubscriptions();
-        await this.checkMovieSubscriptions();
-        setInterval(() => {
-            this.checkTvSubscriptions().then(() => this.checkMovieSubscriptions());
-        }, 1000 * 60 * 60 * 2);
+        this.tvCronId = this.cronService.setup({
+            jobName: 'subs:check-tv',
+            description: 'Check Tv Subscriptions, update episode list and attempt to find and download missing episodes',
+            interval: '0 */2 * * *',
+            onTick: {
+                service: this,
+                methodName: 'cronJob',
+                parameters: [],
+            },
+        });
     }
 
     async getTvSubscriptions(skipTmdb = true): Promise<TvSubscription[]> {

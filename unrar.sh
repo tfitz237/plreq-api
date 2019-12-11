@@ -1,14 +1,23 @@
-declare -a passwords=("soitgoes" "luelinks" "intotheinternet")
+#!/bin/bash
 
+
+directory=$1
+downloadDir=$2
+passwordFile=$3
+passwords=($(cat $passwordFile))
 output=""
 result="Failure"
 for password in ${passwords[*]}; do
-    file=$(find "/media/large/User/Downloads/${1}" -name '*.rar' | sort | head -1)
-    echo "Extracting $file"
-    cd "$(dirname "$file")"
-    output=$(unrar x -p$password "$file")
-    if [[ $output =~ .*"All OK" ]]
-    then
+    files=()
+    while IFS=  read -r -d $'\0'; do
+        files+=("$REPLY")
+    done < <(find "$downloadDir$directory" -name '*.rar' -print0 | sort)
+    echo "Extracting ${files[@]}"
+    dir_name=$(dirname "${files[0]}")
+    cd "$dir_name"
+
+    output=$(unrar x -p$password "$files")
+    if [[ $output =~ .*"All OK" ]]; then
         result="Success"
         break
     fi
