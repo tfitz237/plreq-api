@@ -23,7 +23,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer() server: Server;
   clients: any = [];
   guids: {[level: number]: string } = {};
-  authorizedGuid: string;
   adminGuid: string;
   constructor(private jdService: JdService,
               private fileService: FileService,
@@ -109,7 +108,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection {
   private joinChannels(client, user) {
     client.authorized = true;
     client.user = user;
-    client.join(this.authorizedGuid);
     for (const i in UserLevel) {
       if (this.guids[i] && user.level >= i) {
         client.join(this.guids[i]);
@@ -118,7 +116,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection {
   }
   private leaveChannels(client) {
     client.authorized = false;
-    client.leave(this.authorizedGuid);
     for (const i in UserLevel) {
       if (this.guids[i] && client.user.level >= i) {
         client.leave(this.guids[i]);
