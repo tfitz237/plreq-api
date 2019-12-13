@@ -90,9 +90,7 @@ describe('JdService', () => {
     module = await Test.createTestingModule({
       providers: [
         JdService,
-        {provide: ConfigurationService, useValue: {
-          getConfig: () => config,
-        }},
+        {provide: 'CONFIG', useValue: config},
         {provide: FileService, useValue: { moveVideos }},
         {provide: ItiService, useValue: {}},
         {provide: Logger, useValue: {

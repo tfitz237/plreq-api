@@ -9,7 +9,7 @@ describe('ItiService', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {provide: ConfigurationService, useValue: {}},
+        {provide: 'CONFIG', useValue: {}},
         {provide: Logger, useValue: {}},
         {provide: ItiService, useValue: {}},
         {provide: TmdbService, useValue: {}},
