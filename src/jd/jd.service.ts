@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Inject } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
 import { resolve } from 'url';
 import { CronService } from '../cron/cron.service';
@@ -12,6 +12,7 @@ import { LogMe } from '../shared/log/logme';
 import { WsGateway } from '../ws/ws.gateway';
 import FileService from './file.service';
 import { UserLevel } from '../shared/constants';
+import { IConfiguration } from '../models/config';
 @Injectable()
 export class JdService extends LogMe {
 
@@ -28,7 +29,8 @@ export class JdService extends LogMe {
     moveCronId: number;
     private socket: WsGateway;
     constructor(private readonly fileService: FileService,
-                private readonly configService: ConfigurationService,
+                @Inject('CONFIG')
+                private readonly config: IConfiguration,
                 private readonly logService: Logger,
                 private readonly itiService: ItiService,
                 private readonly cronService: CronService) {
@@ -38,10 +40,6 @@ export class JdService extends LogMe {
     setSocket(socket: WsGateway) {
         this.socket = socket;
         this.initiate();
-    }
-
-    async config() {
-        return await this.configService.getConfig();
     }
 
     async initiate(): Promise<JdInit> {
@@ -89,8 +87,7 @@ export class JdService extends LogMe {
 
     async connect(): Promise<JdConnectResponse> {
         try {
-            const config = await this.config();
-            const response = await jdApi.connect(config.jd.email, config.jd.password);
+            const response = await jdApi.connect(this.config.jd.email, this.config.jd.password);
             if (response === true) {
                 this.isConnected = true;
                 return {

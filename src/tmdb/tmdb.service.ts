@@ -1,39 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import axios from 'axios';
 import { TmdbEpisode } from '../models/tmdb';
 import ConfigurationService from '../shared/configuration/configuration.service';
+import { IConfiguration } from '../models/config';
 
 @Injectable()
 export class TmdbService {
     private genres: any;
     private hostPrefix: string = 'https://api.themoviedb.org/3';
-    constructor(private readonly configService: ConfigurationService) {
+    constructor(    @Inject('CONFIG')
+    private readonly config: IConfiguration) {
     }
 
-    async config() {
-        return await this.configService.getConfig();
-    }
     async getSeason(name: string, season: number, id?: number): Promise<{showId: number, episodes: TmdbEpisode[]}> {
-        const config = await this.config();
         if (!id) {
             id = await this.getShowId(name);
         }
         if (id) {
-            const seasonResults = await axios.get(`${this.hostPrefix}/tv/${id}/season/${season}?api_key=${config.tmdb.apiKey}`);
+            const seasonResults = await axios.get(`${this.hostPrefix}/tv/${id}/season/${season}?api_key=${this.config.tmdb.apiKey}`);
             return {showId: id, episodes: seasonResults.data.episodes};
         }
         return null;
     }
 
     async searchForShow(name: string) {
-        const config = await this.config();
-        const result = await axios.get(`${this.hostPrefix}/search/tv?api_key=${config.tmdb.apiKey}&query=${name}`);
+        const result = await axios.get(`${this.hostPrefix}/search/tv?api_key=${this.config.tmdb.apiKey}&query=${name}`);
         return await this.mapTvSearchResults(result.data.results);
     }
 
     async searchForMovie(name: string, single?: boolean) {
-        const config = await this.config();
-        const result = await axios.get(`${this.hostPrefix}/search/movie?api_key=${config.tmdb.apiKey}&query=${name}`);
+        const result = await axios.get(`${this.hostPrefix}/search/movie?api_key=${this.config.tmdb.apiKey}&query=${name}`);
         if (single) {
             const singleResult = await this.getMovie(result.data.results[0].id);
             return singleResult;
@@ -42,14 +38,12 @@ export class TmdbService {
     }
 
     async getMovie(id: number) {
-        const config = await this.config();
-        const result = await axios.get(`${this.hostPrefix}/movie/${id}?api_key=${config.tmdb.apiKey}`);
+        const result = await axios.get(`${this.hostPrefix}/movie/${id}?api_key=${this.config.tmdb.apiKey}`);
         return result.data;
     }
 
     async getShowSeasons(id: number) {
-        const config = await this.config();
-        const result = await axios.get(`${this.hostPrefix}/tv/${id}?api_key=${config.tmdb.apiKey}`);
+        const result = await axios.get(`${this.hostPrefix}/tv/${id}?api_key=${this.config.tmdb.apiKey}`);
         return this.mapSeasonSearchResults(result.data);
     }
 
@@ -102,9 +96,8 @@ export class TmdbService {
             this.genres.movie && this.genres.movie.length > 0) {
             return this.genres;
         }
-        const config = await this.config();
-        const movieResults = await axios.get(`${this.hostPrefix}/genre/movie/list?api_key=${config.tmdb.apiKey}`);
-        const tvResults = await axios.get(`${this.hostPrefix}/genre/tv/list?api_key=${config.tmdb.apiKey}`);
+        const movieResults = await axios.get(`${this.hostPrefix}/genre/movie/list?api_key=${this.config.tmdb.apiKey}`);
+        const tvResults = await axios.get(`${this.hostPrefix}/genre/tv/list?api_key=${this.config.tmdb.apiKey}`);
         this.genres = [];
         this.genres[MediaType.TV]  = tvResults.data.genres;
         this.genres[MediaType.MOVIE] = movieResults.data.genres;

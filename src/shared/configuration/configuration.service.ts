@@ -13,7 +13,6 @@ export default class ConfigurationService {
     _config: any = {};
     constructor(@InjectRepository(Configurations) private readonly configRepo: Repository<Configurations>)
     {
-        this.retrieveAll();
     }
 
     async getConfig(): Promise<IConfiguration> {
@@ -58,3 +57,4 @@ export default class ConfigurationService {
         return result;
     }
 }
+
