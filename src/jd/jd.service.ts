@@ -75,7 +75,7 @@ export class JdService extends LogMe {
                 packages,
             };
         } else {
-            this.logError('initiate'e, 'No Jdownloader Devices found.');
+            this.logError('initiate', 'No Jdownloader Devices found.');
             throw new HttpException({
                 success: false,
                 error: {
