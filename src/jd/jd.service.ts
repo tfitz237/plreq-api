@@ -29,7 +29,7 @@ export class JdService extends LogMe {
     moveCronId: number;
     private socket: WsGateway;
     constructor(private readonly fileService: FileService,
-                @Inject('CONFIG')
+                @Inject('Configuration')
                 private readonly config: IConfiguration,
                 private readonly logService: Logger,
                 private readonly itiService: ItiService,

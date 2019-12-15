@@ -13,7 +13,7 @@ export class ItiService extends LogMe {
     isLoggedIn: boolean;
     cookie: any;
     constructor(
-        @Inject('CONFIG')
+        @Inject('Configuration')
         private readonly config: IConfiguration,
         private readonly logService: Logger,
         private readonly tmdbService: TmdbService) {

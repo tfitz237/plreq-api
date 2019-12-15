@@ -11,7 +11,7 @@ import { IConfiguration } from '../models/config';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly authService: AuthService,
-    @Inject('CONFIG')
+    @Inject('Configuration')
     private readonly config: IConfiguration) {
       super( {
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

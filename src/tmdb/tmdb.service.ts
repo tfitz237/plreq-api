@@ -8,7 +8,7 @@ import { IConfiguration } from '../models/config';
 export class TmdbService {
     private genres: any;
     private hostPrefix: string = 'https://api.themoviedb.org/3';
-    constructor(    @Inject('CONFIG')
+    constructor(    @Inject('Configuration')
     private readonly config: IConfiguration) {
     }
 
