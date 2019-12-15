@@ -33,3 +33,10 @@ export interface ItiLinkResponse {
     results: ItiLink[];
     page: number;
 }
+
+export interface ItiDetails {
+    links: string[];
+    imageref: string[];
+    tags: string[];
+    info: string;
+}

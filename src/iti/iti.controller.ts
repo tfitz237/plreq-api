@@ -22,6 +22,12 @@ export class ItiController {
         return await this.itiService.getLinks(linkId);
     }
 
+    @Roles(UserLevel.ItiUser)
+    @Get('getDetails/:id')
+    async getDetails(@Param('id') linkId: string): Promise<any> {
+        return await this.itiService.getDetails(linkId);
+    }
+
     @Roles(UserLevel.User)
     @Post('search/tv')
     async getSeason(@Body() request: ItiTvShowQuery, @Param('type') type: string): Promise<any> {
