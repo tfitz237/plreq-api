@@ -1,7 +1,5 @@
-import { Injectable, Inject } from '@nestjs/common';
-import axios from 'axios';
+import { Injectable, Inject, HttpService } from '@nestjs/common';
 import { ItiError, ItiLink, ItiLinkResponse, ItiQuery, ItiDetails } from '../models/iti';
-import ConfigurationService from '../shared/configuration/configuration.service';
 import { LogLevel } from '../shared/log/log.entry.entity';
 import { Logger } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
@@ -18,14 +16,15 @@ export class ItiService extends LogMe {
         @Inject('Configuration')
         private readonly config: IConfiguration,
         private readonly logService: Logger,
-        private readonly tmdbService: TmdbService) {
+        private readonly tmdbService: TmdbService,
+        private readonly httpService: HttpService) {
         super(logService);
     }
 
     async search(request: ItiQuery, retry: number = 0, results: ItiLink[] = [] ): Promise<ItiLinkResponse|ItiError> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(`${this.config.iti.host}/ajax.php`, {
+                const result = await this.httpService.get(`${this.config.iti.host}/ajax.php`, {
                     params: {
                         i: 'main',
                         which: request.query,
@@ -39,7 +38,7 @@ export class ItiService extends LogMe {
                     headers: {
                         Cookie: this.cookie,
                     },
-                });
+                }).toPromise();
                 const searchResults = result.data;
                 searchResults.shift();
                 searchResults.shift();
@@ -77,14 +76,14 @@ export class ItiService extends LogMe {
     async getDetails(linkId: string): Promise<ItiDetails> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(this.config.iti.host, {
+                const result = await this.httpService.get(this.config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
                     headers: {
                         Cookie: this.cookie,
                     },
-                });
+                }).toPromise();
                 const html = Cheerio.load(result.data);
                 const response = {
                     links: this.getLinksInPage(html),
@@ -104,14 +103,14 @@ export class ItiService extends LogMe {
     async getLinks(linkId: string): Promise<string[]> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(this.config.iti.host, {
+                const result = await this.httpService.get(this.config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
                     headers: {
                         Cookie: this.cookie,
                     },
-                });
+                }).toPromise();
                 return this.getLinksInPage(Cheerio.load(result.data));
             }
             catch (e) {
@@ -124,14 +123,14 @@ export class ItiService extends LogMe {
     async getImageRef(linkId: string): Promise<string[]> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(this.config.iti.host, {
+                const result = await this.httpService.get(this.config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
                     headers: {
                         Cookie: this.cookie,
                     },
-                });
+                }).toPromise();
                 return this.getImageRefInPage(Cheerio.load(result.data));
             }
             catch (e) {
@@ -227,7 +226,7 @@ export class ItiService extends LogMe {
             if (this.cookie) {
                 headers.Cookie = this.cookie;
             }
-            const result = await axios.get(`${this.config.iti.host}`, { headers });
+            const result = await this.httpService.get(`${this.config.iti.host}`, { headers }).toPromise();
             if (result.headers['set-cookie']) {
                 this.cookie = result.headers['set-cookie'][0];
             }
@@ -241,7 +240,7 @@ export class ItiService extends LogMe {
 
     private async login(retry: boolean = false): Promise<boolean> {
         try {
-            const result = await axios.post(this.config.iti.host, `user=${this.config.iti.user}&pass=${this.config.iti.pass}`, {
+            const result = await this.httpService.post(this.config.iti.host, `user=${this.config.iti.user}&pass=${this.config.iti.pass}`, {
                 params: {
                     i: 'redirect',
                 },
@@ -250,7 +249,7 @@ export class ItiService extends LogMe {
                     'Cookie': this.cookie,
                 },
                 withCredentials: true,
-            });
+            }).toPromise();
             return result.data.includes('<a id="icon_logout" href="?i=logout">');
         }
         catch (e) {
