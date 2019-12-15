@@ -1,8 +1,5 @@
-import { APP_GUARD } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthModule } from '../auth/auth.module';
 import { RolesGuard } from '../auth/auth.roles';
-import { JwtStrategy } from '../auth/jwt.strategy';
 import { SubscriptionsController } from './subscriptions.controller';
 import { SubscriptionsService } from './subscriptions.service';
 

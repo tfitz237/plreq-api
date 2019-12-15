@@ -8,7 +8,7 @@ export class LogMe {
     }
 
     log(entrance: any, level: LogLevel, message: string, exception: string = null) {
-        this.logger.log(this.constructor.name, entrance.name, level, message, exception);
+        this.logger.log(this.constructor.name, typeof entrance === 'string' ? entrance : entrance.name, level, message, exception);
     }
 
     logInfo(entrance, message) {

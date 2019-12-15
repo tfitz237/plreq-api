@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import * as fs from 'fs-extra';
 import * as parse from 'parse-torrent-name';
 import * as path from 'path';
@@ -13,21 +13,17 @@ import ConfigurationService from '../shared/configuration/configuration.service'
 @Injectable()
 export default class FileService {
     socket: WsGateway;
-    config: IConfiguration;
-    constructor(private readonly configService: ConfigurationService) {
-        this.setConfiguration();
+    constructor(
+        @Inject('CONFIG')
+        private readonly config: IConfiguration) {
     }
 
-    async setConfiguration() {
-        this.config = await this.configService.getConfig();
-    }
 
     setSocket(socket: WsGateway) {
         this.socket = socket;
     }
 
     async unrar(pkg: JdPackage): Promise<boolean> {
-        this.config = await this.configService.getConfig();
         const packages = this.findRars(this.config.filePaths.dir, [pkg]);
         pkg = packages[0];
         return new Promise<boolean>((res, rej) => {
@@ -55,7 +51,6 @@ export default class FileService {
     }
 
     async moveVideos(packages: JdPackage[] = []): Promise<[boolean, JdPackage[]]> {
-        this.config = await this.configService.getConfig();
         packages = this.findVideos(this.config.filePaths.dir, packages);
         const moved = false;
         for (const j in packages) {

@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Inject } from '@nestjs/common';
 import * as jdApi from 'jdownloader-api';
 import { resolve } from 'url';
 import { CronService } from '../cron/cron.service';
@@ -11,6 +11,8 @@ import { Logger } from '../shared/log/log.service';
 import { LogMe } from '../shared/log/logme';
 import { WsGateway } from '../ws/ws.gateway';
 import FileService from './file.service';
+import { UserLevel } from '../shared/constants';
+import { IConfiguration } from '../models/config';
 @Injectable()
 export class JdService extends LogMe {
 
@@ -27,7 +29,8 @@ export class JdService extends LogMe {
     moveCronId: number;
     private socket: WsGateway;
     constructor(private readonly fileService: FileService,
-                private readonly configService: ConfigurationService,
+                @Inject('CONFIG')
+                private readonly config: IConfiguration,
                 private readonly logService: Logger,
                 private readonly itiService: ItiService,
                 private readonly cronService: CronService) {
@@ -37,10 +40,6 @@ export class JdService extends LogMe {
     setSocket(socket: WsGateway) {
         this.socket = socket;
         this.initiate();
-    }
-
-    async config() {
-        return await this.configService.getConfig();
     }
 
     async initiate(): Promise<JdInit> {
@@ -54,7 +53,7 @@ export class JdService extends LogMe {
         const response = !this.isConnected ? await this.connect() : {connected: true};
 
         if (!response.connected) {
-            this.logError(this.initiate, 'Could not connect to Jdownloader', response.error);
+            this.logError('initiate', 'Could not connect to Jdownloader', response.error);
             throw new HttpException({
                 success: false,
                 error: response.error,
@@ -67,14 +66,14 @@ export class JdService extends LogMe {
             if (this.cronId === undefined) {
                 this.setupPollingCache();
             }
-            await this.logInfo(this.initiate, 'Initated connection with Jdownloader');
+            await this.logInfo('initiate', 'Initated connection with Jdownloader');
             return {
                 id: deviceId,
                 success: true,
                 packages,
             };
         } else {
-            this.logError(this.initiate, 'No Jdownloader Devices found.');
+            this.logError('initiate', 'No Jdownloader Devices found.');
             throw new HttpException({
                 success: false,
                 error: {
@@ -88,8 +87,7 @@ export class JdService extends LogMe {
 
     async connect(): Promise<JdConnectResponse> {
         try {
-            const config = await this.config();
-            const response = await jdApi.connect(config.jd.email, config.jd.password);
+            const response = await jdApi.connect(this.config.jd.email, this.config.jd.password);
             if (response === true) {
                 this.isConnected = true;
                 return {
@@ -112,7 +110,7 @@ export class JdService extends LogMe {
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
-            await this.logInfo(this.movePackages, `Moved videos: ${movedPackages.map(x =>
+            await this.logInfo('movePackages', `Moved videos: ${movedPackages.map(x =>
                     `${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName : 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`,
             )}`);
             if (movedPackages.length > 0) {
@@ -211,7 +209,7 @@ export class JdService extends LogMe {
                     return pck.data;
                 } catch {}
             }
-            await this.logError(this.getPackages, `Error finding packages`, null);
+            await this.logError('getPackages', `Error finding packages`, null);
             throw new HttpException({
                 success: false,
                 error: {
@@ -245,10 +243,10 @@ export class JdService extends LogMe {
             try {
                 const linksString = links.join(' ');
                 resp = await jdApi.addLinks(linksString, this.deviceId, packageName);
-                await this.logInfo(this.addLinks, `Added ${links.length} links under the name ${packageName}`);
+                await this.logInfo('addLinks', `Added ${links.length} links under the name ${packageName}`);
                 return { success: true};
             } catch (e) {
-                await this.logError(this.addLinks, `Error adding links`, e.error);
+                await this.logError('addLinks', `Error adding links`, e.error);
                 throw new HttpException({
                     success: false,
                     error: e.error,
@@ -261,8 +259,8 @@ export class JdService extends LogMe {
 
     async cronJob() {
         await this.getPackages(false, null, false);
-        if (this.socket && this.socket.server) {
-            this.socket.server.to(this.socket.authorizedGuid).emit('packages', this.packages);
+        if (this.socket) {
+            this.socket.sendEvent('packages', this.packages, UserLevel.User);
         }
     }
 
@@ -280,7 +278,7 @@ export class JdService extends LogMe {
         this.moveCronId = this.cronService.setup({
             jobName: 'jd:move-packages',
             description: 'Move Finished JDownloader Packages to given directory',
-            interval: '0 * * * *',
+            interval: '0 * * * * *',
             onTick: {
                 service: this,
                 methodName: 'movePackages',
@@ -327,7 +325,7 @@ export class JdService extends LogMe {
             }
             catch (e) {
 
-                await this.logError(this.getLinks, 'Could not retrieve links', e);
+                await this.logError('getLinks', 'Could not retrieve links', e);
             }
         }
         return [];
@@ -383,7 +381,7 @@ export class JdService extends LogMe {
             return pack;
         }
         catch (e) {
-            this.logError(this.addPackageDetails, 'error adding package details', e);
+            this.logError('addPackageDetails', 'error adding package details', e);
         }
 
     }

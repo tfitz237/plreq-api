@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import axios from 'axios';
 import { ItiError, ItiLink, ItiLinkResponse, ItiQuery } from '../models/iti';
 import ConfigurationService from '../shared/configuration/configuration.service';
@@ -6,24 +6,24 @@ import { LogLevel } from '../shared/log/log.entry.entity';
 import { Logger } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { LogMe } from '../shared/log/logme';
+import { IConfiguration } from '../models/config';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
 export class ItiService extends LogMe {
     isLoggedIn: boolean;
     cookie: any;
     constructor(
-        private readonly configService: ConfigurationService, private readonly logService: Logger, private readonly tmdbService: TmdbService) {
+        @Inject('CONFIG')
+        private readonly config: IConfiguration,
+        private readonly logService: Logger,
+        private readonly tmdbService: TmdbService) {
         super(logService);
     }
 
-    async config() {
-        return await this.configService.getConfig();
-    }
     async search(request: ItiQuery, retry: number = 0, results: ItiLink[] = [] ): Promise<ItiLinkResponse|ItiError> {
         if (await this.ensureLoggedIn()) {
             try {
-                const config = await this.config();
-                const result = await axios.get(`${config.iti.host}/ajax.php`, {
+                const result = await axios.get(`${this.config.iti.host}/ajax.php`, {
                     params: {
                         i: 'main',
                         which: request.query,
@@ -75,8 +75,7 @@ export class ItiService extends LogMe {
     async getLinks(linkId: string): Promise<string[]> {
         if (await this.ensureLoggedIn()) {
             try {
-                const config = await this.config();
-                const result = await axios.get(config.iti.host, {
+                const result = await axios.get(this.config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
@@ -96,8 +95,7 @@ export class ItiService extends LogMe {
     async getImageRef(linkId: string): Promise<string[]> {
         if (await this.ensureLoggedIn()) {
             try {
-                const config = await this.config();
-                const result = await axios.get(config.iti.host, {
+                const result = await axios.get(this.config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
@@ -220,12 +218,11 @@ export class ItiService extends LogMe {
 
     private async loginStatus(): Promise<boolean> {
         try {
-            const config = await this.config();
             const headers: any = {};
             if (this.cookie) {
                 headers.Cookie = this.cookie;
             }
-            const result = await axios.get(`${config.iti.host}`, { headers });
+            const result = await axios.get(`${this.config.iti.host}`, { headers });
             if (result.headers['set-cookie']) {
                 this.cookie = result.headers['set-cookie'][0];
             }
@@ -238,9 +235,8 @@ export class ItiService extends LogMe {
     }
 
     private async login(retry: boolean = false): Promise<boolean> {
-        const config = await this.config();
         try {
-            const result = await axios.post(config.iti.host, `user=${config.iti.user}&pass=${config.iti.pass}`, {
+            const result = await axios.post(this.config.iti.host, `user=${this.config.iti.user}&pass=${this.config.iti.pass}`, {
                 params: {
                     i: 'redirect',
                 },
