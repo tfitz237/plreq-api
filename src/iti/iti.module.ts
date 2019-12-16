@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, HttpModule } from '@nestjs/common';
 import { TmdbModule } from '../tmdb/tmdb.module';
 import { ItiController } from './iti.controller';
 import { ItiService } from './iti.service';
 
 @Module({
-  imports: [TmdbModule],
+  imports: [TmdbModule, HttpModule],
   controllers: [ItiController],
   providers: [ItiService],
   exports: [ItiService],

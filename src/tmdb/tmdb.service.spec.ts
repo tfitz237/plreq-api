@@ -6,7 +6,7 @@ describe('TmdbService', () => {
   let service: TmdbService;
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TmdbService, {provide: 'CONFIG', useValue: {}}],
+      providers: [TmdbService, {provide: 'Configuration', useValue: {}}],
     }).compile();
     service = module.get<TmdbService>(TmdbService);
   });

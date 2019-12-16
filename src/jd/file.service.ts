@@ -14,7 +14,7 @@ import ConfigurationService from '../shared/configuration/configuration.service'
 export default class FileService {
     socket: WsGateway;
     constructor(
-        @Inject('CONFIG')
+        @Inject('Configuration')
         private readonly config: IConfiguration) {
     }
 

@@ -1,4 +1,5 @@
 config.json
+config.sql
 node_modules/
 test/file/
 dist/

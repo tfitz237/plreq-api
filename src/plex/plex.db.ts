@@ -13,7 +13,7 @@ export default class PlexDb {
     socket: WsGateway;
 
     constructor(
-        @Inject('CONFIG')
+        @Inject('Configuration')
         private readonly config: IConfiguration) {}
 
     setSocket(socket: WsGateway) {

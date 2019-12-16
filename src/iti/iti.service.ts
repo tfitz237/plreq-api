@@ -1,29 +1,30 @@
-import { Injectable, Inject } from '@nestjs/common';
-import axios from 'axios';
-import { ItiError, ItiLink, ItiLinkResponse, ItiQuery } from '../models/iti';
-import ConfigurationService from '../shared/configuration/configuration.service';
+import { Injectable, Inject, HttpService } from '@nestjs/common';
+import { ItiError, ItiLink, ItiLinkResponse, ItiQuery, ItiDetails } from '../models/iti';
 import { LogLevel } from '../shared/log/log.entry.entity';
 import { Logger } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { LogMe } from '../shared/log/logme';
 import { IConfiguration } from '../models/config';
+import * as Cheerio from 'cheerio';
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
 export class ItiService extends LogMe {
     isLoggedIn: boolean;
     cookie: any;
     constructor(
-        @Inject('CONFIG')
+        @Inject('Configuration')
         private readonly config: IConfiguration,
         private readonly logService: Logger,
-        private readonly tmdbService: TmdbService) {
+        private readonly tmdbService: TmdbService,
+        private readonly httpService: HttpService) {
         super(logService);
     }
 
     async search(request: ItiQuery, retry: number = 0, results: ItiLink[] = [] ): Promise<ItiLinkResponse|ItiError> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(`${this.config.iti.host}/ajax.php`, {
+                const result = await this.httpService.get(`${this.config.iti.host}/ajax.php`, {
                     params: {
                         i: 'main',
                         which: request.query,
@@ -37,7 +38,7 @@ export class ItiService extends LogMe {
                     headers: {
                         Cookie: this.cookie,
                     },
-                });
+                }).toPromise();
                 const searchResults = result.data;
                 searchResults.shift();
                 searchResults.shift();
@@ -72,18 +73,45 @@ export class ItiService extends LogMe {
                 && link.title.toLowerCase().includes(word.toLowerCase()));
     }
 
-    async getLinks(linkId: string): Promise<string[]> {
+    async getDetails(linkId: string): Promise<ItiDetails> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(this.config.iti.host, {
+                const result = await this.httpService.get(this.config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
                     headers: {
                         Cookie: this.cookie,
                     },
-                });
-                return this.findLinksInPage(result.data);
+                }).toPromise();
+                const html = Cheerio.load(result.data);
+                const response = {
+                    links: this.getLinksInPage(html),
+                    imageref: this.getImageRefInPage(html),
+                    tags: this.getUserTags(html),
+                    info: this.getInfo(html),
+                };
+                return response;
+            }
+            catch (e) {
+                console.log(e);
+                return e;
+            }
+        }
+    }
+
+    async getLinks(linkId: string): Promise<string[]> {
+        if (await this.ensureLoggedIn()) {
+            try {
+                const result = await this.httpService.get(this.config.iti.host, {
+                    params: {
+                        i: `SIG:${linkId}`,
+                    },
+                    headers: {
+                        Cookie: this.cookie,
+                    },
+                }).toPromise();
+                return this.getLinksInPage(Cheerio.load(result.data));
             }
             catch (e) {
                 console.log(e);
@@ -95,21 +123,30 @@ export class ItiService extends LogMe {
     async getImageRef(linkId: string): Promise<string[]> {
         if (await this.ensureLoggedIn()) {
             try {
-                const result = await axios.get(this.config.iti.host, {
+                const result = await this.httpService.get(this.config.iti.host, {
                     params: {
                         i: `SIG:${linkId}`,
                     },
                     headers: {
                         Cookie: this.cookie,
                     },
-                });
-                return this.findImagesInPage(result.data);
+                }).toPromise();
+                return this.getImageRefInPage(Cheerio.load(result.data));
             }
             catch (e) {
                 console.log(e);
                 return e;
             }
         }
+    }
+
+    async findSeason(name: string, season: number) {
+        const results = [];
+        const episodes = await this.tmdbService.getSeasonList(name, season);
+        if (episodes && episodes.length > 0) {
+            episodes.forEach(episode => results.push(this.findEpisode(name, season, episode, true)));
+        }
+        return await Promise.all(results);
     }
 
     async findEpisode(name: string, season: any, episode: any, exists: boolean = false): Promise<ItiLink|ItiError> {
@@ -156,54 +193,21 @@ export class ItiService extends LogMe {
         };
     }
 
-    async findSeason(name: string, season: number) {
-        const results = [];
-        const episodes = await this.tmdbService.getSeasonList(name, season);
-        if (episodes && episodes.length > 0) {
-            episodes.forEach(episode => results.push(this.findEpisode(name, season, episode, true)));
-        }
-        return await Promise.all(results);
+    private getLinksInPage($: CheerioStatic): string[] {
+        return $('div#links_mega a').toArray().map(x => x.attribs.href);
     }
 
-    findLinksInPage(html: string): string[] {
-        const links = [];
-        const linksDiv = html.match(/<div.*id=\"links_mega\" data-watch-this="">(.*)<\/div>.*<div.*Password/);
-        if (linksDiv) {
-            const reg =  /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/[A-Za-z-.]+\/#[!#\-_A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/[A-Za-z-.]+\/#[!#\-_A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/;
-            const gReg = /<b>\d+<\/b>\s-\s<a href=\"(https:\/\/[A-Za-z-.]+\/#[!#\-_A-Za-z0-9]+)\" target=\"_blank\">(https:\/\/[A-Za-z-.]+\/#[!#\-_A-Za-z0-9]+)<\/a><br class=\"clear\" \/>/g;
-            const linksInDiv = linksDiv[1].match(gReg);
-            if (linksInDiv) {
-                linksInDiv.forEach(link => {
-                    const match = link.match(reg);
-                    if (match) {
-                        links.push(match[1]);
-                    }
-                });
-            }
-        }
-        return links;
+    private getImageRefInPage($: CheerioStatic): string[] {
+        return $('div#links_imgref a').toArray().map(x => x.attribs.href);
     }
 
-    findImagesInPage(html: string): string[] {
-        const images = [];
-        const imagesDiv = html.match(/<div.*id=\"links_imgref\" data-watch-this="">(.*)<\/div>/);
-        const httpRegex = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)';
-        if (imagesDiv) {
-            // tslint:disable-next-line: max-line-length
-            const reg = /<a href="(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))" target="_blank">(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))<\/a><br class="clear" \/>/;
-            // tslint:disable-next-line: max-line-length
-            const gReg = /<a href="(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))" target="_blank">(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))<\/a><br class="clear" \/>/g;
-            const linksInDiv = imagesDiv[1].match(gReg);
-            if (linksInDiv) {
-                linksInDiv.forEach(link => {
-                    const match = link.match(reg);
-                    if (match) {
-                        images.push(match[1]);
-                    }
-                });
-            }
-        }
-        return images;
+    private getInfo($: CheerioStatic): string {
+        $('div#info').find('br').replaceWith('\n');
+        return $('div#info').text();
+    }
+
+    private getUserTags($: CheerioStatic): string[] {
+        return $('div#utags button').toArray().map(x => x.children[0].data);
     }
 
     private async ensureLoggedIn(): Promise<boolean> {
@@ -222,7 +226,7 @@ export class ItiService extends LogMe {
             if (this.cookie) {
                 headers.Cookie = this.cookie;
             }
-            const result = await axios.get(`${this.config.iti.host}`, { headers });
+            const result = await this.httpService.get(`${this.config.iti.host}`, { headers }).toPromise();
             if (result.headers['set-cookie']) {
                 this.cookie = result.headers['set-cookie'][0];
             }
@@ -236,7 +240,7 @@ export class ItiService extends LogMe {
 
     private async login(retry: boolean = false): Promise<boolean> {
         try {
-            const result = await axios.post(this.config.iti.host, `user=${this.config.iti.user}&pass=${this.config.iti.pass}`, {
+            const result = await this.httpService.post(this.config.iti.host, `user=${this.config.iti.user}&pass=${this.config.iti.pass}`, {
                 params: {
                     i: 'redirect',
                 },
@@ -245,7 +249,7 @@ export class ItiService extends LogMe {
                     'Cookie': this.cookie,
                 },
                 withCredentials: true,
-            });
+            }).toPromise();
             return result.data.includes('<a id="icon_logout" href="?i=logout">');
         }
         catch (e) {
