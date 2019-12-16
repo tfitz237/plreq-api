@@ -2,13 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { CronJob as Job } from 'cron';
 import { CronJob } from '../models/cronjob';
 import { Logger } from '../shared/log/log.service';
-import { LogMe } from '../shared/log/logme';
 
 @Injectable()
-export class CronService extends LogMe {
+export class CronService {
     private jobs: CronJob[] = [];
-    constructor(logService: Logger) {
-        super(logService);
+    constructor(private readonly logService: Logger) {
     }
 
     setup({ jobName, interval, onTick, onComplete, description, autoStart = true }: CronSetup): number {
@@ -23,13 +21,13 @@ export class CronService extends LogMe {
                 job:  new Job(
                     interval,
                     async () => {
-                            this.logTrace(this.setup, `CronJob: ${jobName} initiated. `);
+                            this.logService.logTrace('setup', `CronJob: ${jobName} initiated. `);
                             await onTick.service[onTick.methodName](...onTick.parameters);
                     },
                     (onComplete && onComplete.service && onComplete.service[onComplete.methodName])
                         ? async () =>
                             {
-                                this.logTrace(this.setup, `CronJob: ${jobName} finished. `);
+                                this.logService.logTrace('setup', `CronJob: ${jobName} finished. `);
                                 await onComplete.service[onComplete.methodName](...onComplete.parameters);
                             }
                         : null

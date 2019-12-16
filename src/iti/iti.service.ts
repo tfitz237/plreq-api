@@ -3,13 +3,12 @@ import { ItiError, ItiLink, ItiLinkResponse, ItiQuery, ItiDetails } from '../mod
 import { LogLevel } from '../shared/log/log.entry.entity';
 import { Logger } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
-import { LogMe } from '../shared/log/logme';
 import { IConfiguration } from '../models/config';
 import * as Cheerio from 'cheerio';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
-export class ItiService extends LogMe {
+export class ItiService {
     isLoggedIn: boolean;
     cookie: any;
     constructor(
@@ -18,7 +17,6 @@ export class ItiService extends LogMe {
         private readonly logService: Logger,
         private readonly tmdbService: TmdbService,
         private readonly httpService: HttpService) {
-        super(logService);
     }
 
     async search(request: ItiQuery, retry: number = 0, results: ItiLink[] = [] ): Promise<ItiLinkResponse|ItiError> {
@@ -49,7 +47,7 @@ export class ItiService extends LogMe {
                         return this.search(request, ++retry, results);
                     }
                 }
-                this.log(this.search, LogLevel.INFORMATION, `Query: ${JSON.stringify(request)}. Found ${results.length} filtered results`);
+                this.logService.logInfo('search', `Query: ${JSON.stringify(request)}. Found ${results.length} filtered results`);
                 return {
                     page: retry,
                     results,
@@ -94,7 +92,7 @@ export class ItiService extends LogMe {
                 return response;
             }
             catch (e) {
-                console.log(e);
+                this.logService.logError('getDetails', 'Error getting Details', e);
                 return e;
             }
         }
@@ -114,7 +112,7 @@ export class ItiService extends LogMe {
                 return this.getLinksInPage(Cheerio.load(result.data));
             }
             catch (e) {
-                console.log(e);
+                this.logService.logError('getLinks', 'Error getting links', e);
                 return e;
             }
         }
@@ -134,7 +132,7 @@ export class ItiService extends LogMe {
                 return this.getImageRefInPage(Cheerio.load(result.data));
             }
             catch (e) {
-                console.log(e);
+                this.logService.logError('getImageRef', 'Error getting imageRef', e);
                 return e;
             }
         }

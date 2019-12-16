@@ -38,6 +38,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection {
     this.plexDb.setSocket(this);
     this.fileService.setSocket(this);
     this.logger.setSocket(this);
+    this.generateChannels();
   }
 
   generateChannels() {

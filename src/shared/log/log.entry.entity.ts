@@ -18,6 +18,9 @@ export class LogEntry {
     level: LogLevel;
 
     @Column({nullable: true})
+    trace: string;
+
+    @Column({nullable: true})
     exception: string;
 
 }
