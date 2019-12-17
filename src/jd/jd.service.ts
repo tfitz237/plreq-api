@@ -8,19 +8,23 @@ import ConfigurationService from '../shared/configuration/configuration.service'
 import { JSONtryParse } from '../shared/functions';
 import { LogLevel } from '../shared/log/log.entry.entity';
 import { Logger } from '../shared/log/log.service';
-import { LogMe } from '../shared/log/logme';
 import { WsGateway } from '../ws/ws.gateway';
 import FileService from './file.service';
 import { UserLevel } from '../shared/constants';
 import { IConfiguration } from '../models/config';
 @Injectable()
-export class JdService extends LogMe {
+export class JdService {
 
     get isInitiated(): boolean { return this.isConnected && !!this.deviceId; }
 
     private get finishedPackages() {
         return this.packages.filter(pack => pack.finished && pack.status && pack.status.includes('Extraction OK'));
     }
+
+    private get extractionErrorPackages() {
+        return this.packages.filter(pack => pack.finished && pack.status && pack.status.includes('Extraction Error'));
+    }
+
     isConnected: boolean = false;
     deviceId: string;
     links: JdLink[] = [];
@@ -34,7 +38,6 @@ export class JdService extends LogMe {
                 private readonly logService: Logger,
                 private readonly itiService: ItiService,
                 private readonly cronService: CronService) {
-            super(logService);
     }
 
     setSocket(socket: WsGateway) {
@@ -53,7 +56,7 @@ export class JdService extends LogMe {
         const response = !this.isConnected ? await this.connect() : {connected: true};
 
         if (!response.connected) {
-            this.logError('initiate', 'Could not connect to Jdownloader', response.error);
+            this.logService.logError('initiate', 'Could not connect to Jdownloader', response.error);
             throw new HttpException({
                 success: false,
                 error: response.error,
@@ -66,14 +69,14 @@ export class JdService extends LogMe {
             if (this.cronId === undefined) {
                 this.setupPollingCache();
             }
-            await this.logInfo('initiate', 'Initated connection with Jdownloader');
+            await this.logService.logInfo('initiate', 'Initated connection with Jdownloader');
             return {
                 id: deviceId,
                 success: true,
                 packages,
             };
         } else {
-            this.logError('initiate', 'No Jdownloader Devices found.');
+            this.logService.logError('initiate', 'No Jdownloader Devices found.');
             throw new HttpException({
                 success: false,
                 error: {
@@ -110,7 +113,7 @@ export class JdService extends LogMe {
         if (this.anyPackagesFinished(true)) {
             const [success, packages] =  await this.fileService.moveVideos(this.finishedPackages);
             const movedPackages = packages.filter(x => x.files.every(y => y && y.moved));
-            await this.logInfo('movePackages', `Moved videos: ${movedPackages.map(x =>
+            await this.logService.logInfo('movePackages', `Moved videos: ${movedPackages.map(x =>
                     `${x.files.length} files: ${x.files.length > 0 ? x.files[0].fileName : 'No files moved'} to ${x.files.length > 0 ? x.files[0].destination : 'destination'}`,
             )}`);
             if (movedPackages.length > 0) {
@@ -130,7 +133,7 @@ export class JdService extends LogMe {
 
     async cleanUp(finished: JdPackage[] = this.finishedPackages): Promise<JdInit> {
         try {
-            await this.logInfo(this.cleanUp, `Cleaning up ${finished.length} packages named: ${finished.map(x => x.name).join(', ')}`);
+            await this.logService.logInfo(this.cleanUp, `Cleaning up ${finished.length} packages named: ${finished.map(x => x.name).join(', ')}`);
             let result = await jdApi.cleanUp(this.deviceId, finished.map(x => x.uuid));
             const packages = await this.getPackages(false, null, false) as JdPackage[];
             if (packages.length === 0) {
@@ -151,7 +154,7 @@ export class JdService extends LogMe {
 
     async removePackage(pkg: JdPackage): Promise<JdInit> {
         try {
-            await this.logInfo(this.removePackage, `Removing download package named: ${pkg.name}`);
+            await this.logService.logInfo(this.removePackage, `Removing download package named: ${pkg.name}`);
             const result = await jdApi.cleanUp(this.deviceId, [pkg.uuid], 'DELETE_ALL');
             const packages = await this.getPackages(false, null, false) as JdPackage[];
             return {
@@ -202,14 +205,18 @@ export class JdService extends LogMe {
                             this.packages.splice(idx, 1);
                         }
                     });
-
+                    this.logService.logTrace('getPackages',
+`${this.packages.length} total
+${this.finishedPackages.length} finished
+${this.extractionErrorPackages.length} extract error
+`);
                     if (pck.data.length === 1) {
                         return pck.data[0];
                     }
                     return pck.data;
                 } catch {}
             }
-            await this.logError('getPackages', `Error finding packages`, null);
+            await this.logService.logError('getPackages', `Error finding packages`, null);
             throw new HttpException({
                 success: false,
                 error: {
@@ -243,10 +250,10 @@ export class JdService extends LogMe {
             try {
                 const linksString = links.join(' ');
                 resp = await jdApi.addLinks(linksString, this.deviceId, packageName);
-                await this.logInfo('addLinks', `Added ${links.length} links under the name ${packageName}`);
+                await this.logService.logInfo('addLinks', `Added ${links.length} links under the name ${packageName}`);
                 return { success: true};
             } catch (e) {
-                await this.logError('addLinks', `Error adding links`, e.error);
+                await this.logService.logError('addLinks', `Error adding links`, e.error);
                 throw new HttpException({
                     success: false,
                     error: e.error,
@@ -325,7 +332,7 @@ export class JdService extends LogMe {
             }
             catch (e) {
 
-                await this.logError('getLinks', 'Could not retrieve links', e);
+                await this.logService.logError('getLinks', 'Could not retrieve links', e);
             }
         }
         return [];
@@ -381,7 +388,7 @@ export class JdService extends LogMe {
             return pack;
         }
         catch (e) {
-            this.logError('addPackageDetails', 'error adding package details', e);
+            this.logService.logError('addPackageDetails', 'error adding package details', e);
         }
 
     }

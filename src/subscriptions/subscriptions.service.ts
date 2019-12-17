@@ -8,14 +8,13 @@ import { JdService } from '../jd/jd.service';
 import { ItiError, ItiLink, ItiLinkResponse } from '../models/iti';
 import PlexDb from '../plex/plex.db';
 import { Logger } from '../shared/log/log.service';
-import { LogMe } from '../shared/log/logme';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MovieSubscription } from './movie-subscription.entity';
 import { ItiLinkStatus, TvEpisode } from './suscription.episode.entity';
 import { TvSubscription } from './tv-subscription.entity';
 
 @Injectable()
-export class SubscriptionsService extends LogMe{
+export class SubscriptionsService{
     tvCronId: number;
     movieCronId: number;
     tvSubscriptions: TvSubscription[] = [];
@@ -46,7 +45,6 @@ export class SubscriptionsService extends LogMe{
         private readonly plexDb: PlexDb,
         private readonly cronService: CronService,
     ) {
-        super(logService);
         this.setupPolling();
     }
 
@@ -58,7 +56,7 @@ export class SubscriptionsService extends LogMe{
         this.tvCronId = this.cronService.setup({
             jobName: 'subs:check-tv',
             description: 'Check Tv Subscriptions, update episode list and attempt to find and download missing episodes',
-            interval: '0 */2 * * *',
+            interval: '0 0 */2 * * *',
             onTick: {
                 service: this,
                 methodName: 'cronJob',

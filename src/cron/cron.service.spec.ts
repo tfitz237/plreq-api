@@ -1,9 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '../shared/log/log.service';
-import { CronService, CronSetup } from './cron.service';
+import { CronService } from './cron.service';
+import { CronSetup, CronJob } from '../models/cronjob';
 
 describe('CronService', () => {
   let service: CronService;
+
+
   jest.useFakeTimers();
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -70,38 +73,31 @@ describe('CronService', () => {
   });
 
   describe('setup()', () => {
+
+    let cronSetup: CronSetup;
     beforeEach(() => {
       (service as any).jobs = [];
-    });
-
-    it('should return an id', () => {
-      const cronSetup: CronSetup = {
+      cronSetup = {
         jobName: 'test',
         interval: '* * * * * *',
         onTick: { service: { test: () => null}, methodName: 'test', parameters: []},
         autoStart: false,
       };
+    });
+
+    it('should return an id', () => {
       const id = service.setup(cronSetup);
       expect(id).toBe(0);
     });
     it('should not return an id if the method does not exist', () => {
-      const cronSetup: CronSetup = {
-        jobName: 'test',
-        interval: '* * * * * *',
-        onTick: { service: { }, methodName: 'test', parameters: []},
-        autoStart: false,
-      };
+      cronSetup.onTick.service = {};
       const id = service.setup(cronSetup);
       expect(id).toBe(null);
     });
     it('should run the given job, and stop the given job', () => {
       let i = 0;
       const fn = jest.fn(() => i++);
-      const cronSetup: CronSetup = {
-        jobName: 'test',
-        interval: '* * * * * *',
-        onTick: { service: { test:  fn}, methodName: 'test', parameters: []},
-      };
+      cronSetup.onTick.service.test = fn;
       const id = service.setup(cronSetup);
       expect((service as any).jobs.length).toBe(1);
       expect(id).toBe(0);
@@ -116,5 +112,42 @@ describe('CronService', () => {
         }, 5000);
       }, 3000);
     });
+  });
+
+  describe('toSerializable', () => {
+    const cronSetup = {
+      jobName: 'test',
+      interval: '* * * * * *',
+      onTick: { service: { test: () => null}, methodName: 'test', parameters: []},
+      autoStart: false,
+    };
+    let job: CronJob;
+
+    beforeEach(() => {
+      (service as any).jobs = [];
+      job = service.getJob(service.setup(cronSetup));
+      expect(job).toBeTruthy();
+    });
+
+    it('returns a serialized job', () => {
+      const result = (service as any).toSerializable(job);
+      expect(result.name).toBe(job.name);
+      expect(result.job.cronTime).toBe(cronSetup.interval);
+      expect(result.id).toBe(0);
+      expect(result.job.lastDate).toBe(null);
+      expect(result.job.running).toEqual(cronSetup.autoStart || undefined);
+    });
+
+    it('should fail to return a job', () => {
+      job.name = null;
+      let result = (service as any).toSerializable(job);
+      expect(result).toBe(null);
+      job.name = 'test';
+      result = (service as any).toSerializable(job);
+      expect(result.name).toBe(job.name);
+      job.job = null;
+      result = (service as any).toSerializable(job);
+      expect(result).toBe(null);
+    })
   });
 });

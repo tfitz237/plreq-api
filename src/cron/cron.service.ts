@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CronJob as Job } from 'cron';
-import { CronJob } from '../models/cronjob';
+import { CronJob, CronSetup } from '../models/cronjob';
 import { Logger } from '../shared/log/log.service';
-import { LogMe } from '../shared/log/logme';
+import moment = require('moment-timezone');
 
 @Injectable()
-export class CronService extends LogMe {
+export class CronService {
     private jobs: CronJob[] = [];
-    constructor(logService: Logger) {
-        super(logService);
+    constructor(private readonly logService: Logger) {
     }
 
     setup({ jobName, interval, onTick, onComplete, description, autoStart = true }: CronSetup): number {
@@ -23,13 +22,13 @@ export class CronService extends LogMe {
                 job:  new Job(
                     interval,
                     async () => {
-                            this.logTrace(this.setup, `CronJob: ${jobName} initiated. `);
+                            this.logService.logTrace('setup', `CronJob: ${jobName} initiated. `);
                             await onTick.service[onTick.methodName](...onTick.parameters);
                     },
                     (onComplete && onComplete.service && onComplete.service[onComplete.methodName])
                         ? async () =>
                             {
-                                this.logTrace(this.setup, `CronJob: ${jobName} finished. `);
+                                this.logService.logTrace('setup', `CronJob: ${jobName} finished. `);
                                 await onComplete.service[onComplete.methodName](...onComplete.parameters);
                             }
                         : null
@@ -45,8 +44,20 @@ export class CronService extends LogMe {
 
     }
 
+    getJobsSerializable() {
+        return this.jobs.map(this.toSerializable);
+    }
+
     getJob(id: number): CronJob {
         return this.jobs[id];
+    }
+
+    getJobSerializable(id: number) {
+        const job = this.jobs[id];
+        if (job) {
+            return this.toSerializable(job);
+        }
+        return null;
     }
 
     findJob(name: string): CronJob {
@@ -57,28 +68,36 @@ export class CronService extends LogMe {
         const cronJob = this.getJob(id);
         if (cronJob) {
             cronJob.job.start();
+            return cronJob.job.running;
         }
+        return false;
     }
 
     stopJob(id: number) {
         const cronJob = this.getJob(id);
         if (cronJob) {
             cronJob.job.stop();
+            return !cronJob.job.running;
         }
+        return true;
     }
-}
 
-export interface CronSetup {
-    jobName: string;
-    interval: string;
-    onTick: CronFunction;
-    onComplete?: CronFunction;
-    description?: string;
-    autoStart?: boolean;
-}
+    private toSerializable(x: CronJob) {
+        const job = x.job as any;
+        if (x && x.name && x.job) {
+            return {
+                name: x.name,
+                id: x.id,
+                description: x.description,
+                job: {
+                    nextDate: job.nextDate().tz(job.cronTime.zone).format(),
+                    lastDate: job.lastDate() ? moment.tz(job.lastDate(), job.cronTime.zone).format() : null,
+                    running: job.running,
+                    cronTime: job.cronTime.source,
+                },
+            };
+        }
 
-export interface CronFunction {
-    service: object;
-    methodName: string;
-    parameters: any[];
+        return null;
+    }
 }
