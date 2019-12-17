@@ -84,7 +84,6 @@ export class ItiService {
                 }).toPromise();
                 const html = Cheerio.load(result.data);
                 const response = {
-                    links: this.getLinksInPage(html),
                     imageref: this.getImageRefInPage(html),
                     tags: this.getUserTags(html),
                     info: this.getInfo(html),

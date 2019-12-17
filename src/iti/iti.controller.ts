@@ -22,7 +22,7 @@ export class ItiController {
         return await this.itiService.getLinks(linkId);
     }
 
-    @Roles(UserLevel.ItiUser)
+    @Roles(UserLevel.User)
     @Get('getDetails/:id')
     async getDetails(@Param('id') linkId: string): Promise<any> {
         return await this.itiService.getDetails(linkId);
