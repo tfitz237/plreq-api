@@ -133,7 +133,7 @@ export class JdService {
 
     async cleanUp(finished: JdPackage[] = this.finishedPackages): Promise<JdInit> {
         try {
-            await this.logService.logInfo(this.cleanUp, `Cleaning up ${finished.length} packages named: ${finished.map(x => x.name).join(', ')}`);
+            await this.logService.logInfo('cleanUp', `Cleaning up ${finished.length} packages named: ${finished.map(x => x.name).join(', ')}`);
             let result = await jdApi.cleanUp(this.deviceId, finished.map(x => x.uuid));
             const packages = await this.getPackages(false, null, false) as JdPackage[];
             if (packages.length === 0) {
@@ -154,7 +154,7 @@ export class JdService {
 
     async removePackage(pkg: JdPackage): Promise<JdInit> {
         try {
-            await this.logService.logInfo(this.removePackage, `Removing download package named: ${pkg.name}`);
+            await this.logService.logInfo('removePackage', `Removing download package named: ${pkg.name}`);
             const result = await jdApi.cleanUp(this.deviceId, [pkg.uuid], 'DELETE_ALL');
             const packages = await this.getPackages(false, null, false) as JdPackage[];
             return {
