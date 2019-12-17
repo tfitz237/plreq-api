@@ -35,7 +35,7 @@ export interface ItiLinkResponse {
 }
 
 export interface ItiDetails {
-    links: string[];
+    links?: string[];
     imageref: string[];
     tags: string[];
     info: string;
