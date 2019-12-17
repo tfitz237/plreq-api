@@ -94,7 +94,8 @@ describe('JdService', () => {
         {provide: FileService, useValue: { moveVideos }},
         {provide: ItiService, useValue: {}},
         {provide: Logger, useValue: {
-          log: (a, b, c, d, e) => {},
+          logInfo: (a, b) => {},
+          logError: (a, b, c) => {},
         }},
         {provide: CronService, useValue: {setup: () => 1}},
       ],
