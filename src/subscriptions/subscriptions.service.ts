@@ -56,7 +56,7 @@ export class SubscriptionsService{
         this.tvCronId = this.cronService.setup({
             jobName: 'subs:check-tv',
             description: 'Check Tv Subscriptions, update episode list and attempt to find and download missing episodes',
-            interval: '0 */2 * * *',
+            interval: '0 0 */2 * * *',
             onTick: {
                 service: this,
                 methodName: 'cronJob',
