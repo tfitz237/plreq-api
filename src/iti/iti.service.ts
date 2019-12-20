@@ -19,7 +19,50 @@ export class ItiService {
         private readonly httpService: HttpService) {
     }
 
-    async search(request: ItiQuery, retry: number = 0, results: ItiLink[] = [] ): Promise<ItiLinkResponse|ItiError> {
+    async search(request: ItiQuery): Promise<ItiLinkResponse[]> {
+        if (await this.ensureLoggedIn()) {
+            try {
+                const result = await this.httpService.get(`${this.config.iti.host}/`, {
+                    params: {
+                        c: request.parent,
+                        t: request.child,
+                        advs: 'y',
+                        linksIn: 'title',
+                        addedBy: 'anyone'
+                    }
+                }).toPromise();
+                
+                const $ = cheerio.load(result.data);
+                const links = [];
+                $('div#links .row').not('.header').each(function (i, el) {
+                    const tags = [];
+                    $(this).find('div a.utagsforlinks').each(function (i, el) {
+                        tags.push($(this).text());
+                    });
+                        
+
+                    links.push({
+                        linkid: $(this).find('div.title a.poster').attr('href').replace('?i=SIG:', ''),
+                        title: $(this).find('div.title a.poster .title').text(),
+                        parent: $(this).find('div.category').text(),
+                        child: request.child,
+                        user_tags: tags,
+                        tags: $(this).find('div.title span.tags').text(),
+                        datetime: $(this).find('.date').text(),
+                        links_imgref: $(this).find('div.tile a.poster em img').attr('src')
+
+                    });                    
+                });
+                
+            }
+            catch (e) {
+
+            }
+        }
+    }
+    
+
+    async searchOld(request: ItiQuery, retry: number = 0, results: ItiLink[] = [] ): Promise<ItiLinkResponse|ItiError> {
         if (await this.ensureLoggedIn()) {
             try {
                 const result = await this.httpService.get(`${this.config.iti.host}/ajax.php`, {
@@ -44,7 +87,7 @@ export class ItiService {
                     const filtered = searchResults.filter(link => this.filterSearchResult(link, request.query));
                     results = results.concat(filtered);
                     if (filtered.length < searchResults.length && results.length < 50) {
-                        return this.search(request, ++retry, results);
+                        return this.searchOld(request, ++retry, results);
                     }
                 }
                 this.logService.logInfo('search', `Query: ${JSON.stringify(request)}. Found ${results.length} filtered results`);
