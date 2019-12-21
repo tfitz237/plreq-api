@@ -11,12 +11,11 @@ import { AuthService, guid } from '../auth/auth.service';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import FileService from '../jd/file.service';
 import { JdService } from '../jd/jd.service';
-import { JdPackage } from '../models/jdownloader';
+import { JdPackage, LogLevel } from '../models';
 import { IUser } from '../models/user';
 import PlexDb from '../plex/plex.db';
 import { UserLevel } from '../shared/constants';
-import { Logger } from '../shared/log/log.service';
-import { LogEntry, LogLevel } from '../shared/log/log.entry.entity';
+import { LogService } from '../shared/log/log.service';
 import { Server } from 'socket.io';
 @WebSocketGateway()
 export class WsGateway implements OnGatewayInit, OnGatewayConnection {
@@ -29,7 +28,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection {
               private authService: AuthService,
               private jwtStrategy: JwtStrategy,
               private plexDb: PlexDb,
-              private logger: Logger) {
+              private logger: LogService) {
 
   }
 

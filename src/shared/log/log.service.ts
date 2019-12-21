@@ -6,7 +6,7 @@ import { WsGateway } from '../../ws/ws.gateway';
 import { UserLevel } from '../constants';
 
 @Injectable()
-export class Logger {
+export class LogService {
     type: any;
     socket: WsGateway;
     displayLevel: LogLevel = LogLevel.DEBUG;

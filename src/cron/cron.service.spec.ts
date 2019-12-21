@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '../shared/log/log.service';
 import { CronService } from './cron.service';
-import { CronSetup, CronJob } from '../models/cronjob';
+import { CronSetup, CronJob } from '../models';
 
 describe('CronService', () => {
   let service: CronService;

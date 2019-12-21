@@ -3,11 +3,10 @@ import * as fs from 'fs-extra';
 import * as parse from 'parse-torrent-name';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
-import { JdPackage } from '../models/jdownloader';
+import { JdPackage, IConfiguration } from '../models';
 import { WsGateway } from '../ws/ws.gateway';
 
 import {spawn, execFile, exec} from 'child_process';
-import { IConfiguration } from '../models/config';
 import ConfigurationService from '../shared/configuration/configuration.service';
 
 @Injectable()

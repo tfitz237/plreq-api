@@ -1,8 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import axios from 'axios';
-import { TmdbEpisode } from '../models/tmdb';
+import { TmdbEpisode, IConfiguration } from '../models';
 import ConfigurationService from '../shared/configuration/configuration.service';
-import { IConfiguration } from '../models/config';
 
 @Injectable()
 export class TmdbService {

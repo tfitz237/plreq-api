@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { Roles, RolesGuard } from '../auth/auth.roles';
-import { ItiError, ItiLink, ItiLinkResponse, ItiQuery, ItiTvShowQuery } from '../models/iti';
+import { ItiError, ItiLinkResponse, ItiQuery, ItiTvShowQuery } from '../models';
 import { UserLevel } from '../shared/constants';
 import { ItiService } from './iti.service';
 

@@ -1,5 +1,5 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { IUser } from '../models/user';
+import { IUser } from '../models';
 import { UserLevel } from '../shared/constants';
 import { Roles, RolesGuard } from './auth.roles';
 import { AuthService } from './auth.service';

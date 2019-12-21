@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as pwHash from 'password-hash';
 import { MoreThan, Repository } from 'typeorm';
-import { IUser } from '../models/user';
+import { IUser } from '../models';
 import ConfigurationService from '../shared/configuration/configuration.service';
 import { UserLevel } from '../shared/constants';
 import { User } from './auth.user.entity';
