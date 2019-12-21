@@ -2,6 +2,8 @@ export * from './config';
 export * from './cronjob';
 export * from './iti';
 export * from './jdownloader';
+export * from './log';
+export * from './plex';
 export * from './status';
 export * from './tmdb';
 export * from './user';
