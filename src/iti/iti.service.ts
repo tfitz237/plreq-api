@@ -1,9 +1,14 @@
 import { Injectable, Inject, HttpService } from '@nestjs/common';
-import { ItiError, ItiLink, ItiLinkResponse, ItiQuery, ItiDetails } from '../models/iti';
-import { LogLevel } from '../shared/log/log.entry.entity';
-import { Logger } from '../shared/log/log.service';
+import {
+    ItiError,
+    ItiLink,
+    ItiLinkResponse,
+    ItiQuery, ItiDetails,
+    IConfiguration,
+    LogLevel
+} from '../models';
+import { LogService } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
-import { IConfiguration } from '../models/config';
 import * as Cheerio from 'cheerio';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 
@@ -24,7 +29,7 @@ export class ItiService {
     constructor(
         @Inject('Configuration')
         private readonly config: IConfiguration,
-        private readonly logService: Logger,
+        private readonly logService: LogService,
         private readonly tmdbService: TmdbService,
         private readonly httpService: HttpService) {
     }

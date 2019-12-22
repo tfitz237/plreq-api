@@ -1,4 +1,4 @@
-name: Unit Tests
+name: Node
 
 on: 
   pull_request:
@@ -10,7 +10,7 @@ on:
   
 
 jobs:
-  UnitTests:
+  UnitTest_Coverage:
 
     runs-on: ubuntu-latest
 
@@ -24,9 +24,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 12.x
-    - name: npm install, build, and test
+    - name: npm test
       run: |
         npm ci
-        npm test
+        npm run test:cov
       env:
         CI: true

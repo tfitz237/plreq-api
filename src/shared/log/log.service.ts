@@ -1,12 +1,14 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LogEntry, LogLevel } from './log.entry.entity';
+import { LogEntry } from './log.entry.entity';
 import { Repository } from 'typeorm';
 import { WsGateway } from '../../ws/ws.gateway';
 import { UserLevel } from '../constants';
+import { MoreThanOrEqual, Like } from 'typeorm';
+import { LogQuery, LogLevel } from '../../models';
 
 @Injectable()
-export class Logger {
+export class LogService {
     type: any;
     socket: WsGateway;
     displayLevel: LogLevel = LogLevel.DEBUG;
@@ -18,10 +20,36 @@ export class Logger {
     public setSocket(gateway: WsGateway) {
         this.socket = gateway;
     }
-    public async log(entrance, level: LogLevel, message: string, exception: any = null) {
+    public async log(entrance: 'string', level: LogLevel, message: string, exception: any = null) {
         const trace = new Error().stack;
         const parsed = this.parseStack(trace, entrance);
         return await this.logEntry(parsed.logger, level, message, parsed.trace, exception);
+    }
+
+    async getLogs({ level, page = 1, pageSize = 100,  logger = null, entrance = null, singleLevel = false, order = 'DESC' }: LogQuery): Promise<LogEntry[]> {
+        const query: any = {
+            where: {
+                level: singleLevel ? level : MoreThanOrEqual(level),
+            },
+            take: pageSize,
+            skip: pageSize * (page - 1),
+            order: {
+                id: order,
+            },
+        };
+        if (logger || entrance) {
+            query.where.logger = Like(`${logger}${entrance ? '.' + entrance : ''}`);
+        }
+        try {
+            const logEntries = await this.logger.find(query);
+            return logEntries;
+        }
+        catch (e) {
+            this.logError('getLogs',
+            `error retrieving logs with query: ${JSON.stringify(query)}`,
+            e);
+        }
+        return null;
     }
 
     logInfo(entrance, message) {
@@ -67,6 +95,7 @@ export class Logger {
         result.trace = traces.filter(x => ignoreLines.indexOf(x.logger) === -1).map(x => `${x.logger} (${x.path})`).join('\n');
         return result;
     }
+
     private async logEntry(logger: string, level: LogLevel, message: string, trace?: string, exception?: any) {
         const logEntry = new LogEntry();
         logEntry.created = Date.now();

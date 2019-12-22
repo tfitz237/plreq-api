@@ -5,9 +5,9 @@ import { Repository } from 'typeorm';
 import { CronService } from '../cron/cron.service';
 import { ItiService } from '../iti/iti.service';
 import { JdService } from '../jd/jd.service';
-import { ItiError, ItiLink, ItiLinkResponse } from '../models/iti';
+import { ItiError, ItiLink, ItiLinkResponse } from '../models';
 import PlexDb from '../plex/plex.db';
-import { Logger } from '../shared/log/log.service';
+import { LogService } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MovieSubscription } from './movie-subscription.entity';
 import { ItiLinkStatus, TvEpisode } from './suscription.episode.entity';
@@ -38,7 +38,7 @@ export class SubscriptionsService{
     constructor(
         @InjectRepository(TvSubscription) private readonly tvSubRepo: Repository<TvSubscription>,
         @InjectRepository(MovieSubscription) private readonly movieSubRepo: Repository<MovieSubscription>,
-        private readonly logService: Logger,
+        private readonly logService: LogService,
         private readonly itiService: ItiService,
         private readonly jdService: JdService,
         private readonly tmdbService: TmdbService,

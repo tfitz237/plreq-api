@@ -4,12 +4,14 @@ import Configurations from './configuration/configuration.entity';
 import ConfigurationService from './configuration/configuration.service';
 import { configProvider } from './configuration/configuration.provider';
 import { LogEntry } from './log/log.entry.entity';
-import { Logger } from './log/log.service';
+import { LogService } from './log/log.service';
+import { LogController } from './log/log.controller';
 
 @Global()
 @Module({
     imports: [TypeOrmModule.forFeature([LogEntry, Configurations])],
-    providers: [ConfigurationService, Logger, configProvider],
-    exports: [ConfigurationService, Logger, configProvider],
+    providers: [ConfigurationService, LogService, configProvider],
+    exports: [ConfigurationService, LogService, configProvider],
+    controllers: [LogController],
 })
 export class SharedModule {}

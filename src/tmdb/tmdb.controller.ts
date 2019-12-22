@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { Roles, RolesGuard } from '../auth/auth.roles';
-import { ItiTvShowQuery } from '../models/iti';
+import { ItiTvShowQuery } from '../models';
 import { UserLevel } from '../shared/constants';
 import { TmdbService } from './tmdb.service';
 
