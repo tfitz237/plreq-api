@@ -13,7 +13,7 @@ export class ItiController {
     @Roles(UserLevel.User)
     @Post('search')
     async search(@Body() request: ItiQuery): Promise<ItiLinkResponse|ItiError> {
-        return await this.itiService.search(request, request.page);
+        return await this.itiService.search(request);
     }
 
     @Roles(UserLevel.ItiUser)

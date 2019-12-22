@@ -3,10 +3,11 @@ export interface ItiLink {
     parent: string;
     child: string;
     title: string;
-    tags: string;
+    tags: string[];
+    user_tags: string[];
     datetime: string;
     links_imgref: string;
-    poster: string;
+    poster?: string;
 }
 
 export interface ItiError {

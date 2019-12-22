@@ -195,9 +195,9 @@ export class SubscriptionsService{
             if (!itiError.error && !itiError.loggedIn) {
                 for (let i = 0; i < itiLinks.results.length; i++) {
                     const itiLink = itiLinks.results[i];
-                    if (itiLink && this.isBetterQuality(highestQuality, itiLink.tags, itiLink.child)) {
+                    if (itiLink && this.isBetterQuality(highestQuality, itiLink.tags.join(' '), itiLink.child)) {
                         highestQualityLink = itiLink;
-                        highestQuality = itiLink.tags || itiLink.child;
+                        highestQuality = itiLink.tags.join(' ') || itiLink.child;
                     }
                 }
                 if (highestQuality !== sub.currentQuality && highestQualityLink !== null) {

@@ -10,12 +10,22 @@ import {
 import { LogService } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import * as Cheerio from 'cheerio';
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 @Injectable()
 export class ItiService {
-    isLoggedIn: boolean;
     cookie: any;
+
+    categoryMap = {
+        Movies: 4,
+        TV: 7,
+    };
+
+    sectionMap = {
+        SD: 15,
+        HD: 20,
+    };
     constructor(
         @Inject('Configuration')
         private readonly config: IConfiguration,
@@ -24,121 +34,109 @@ export class ItiService {
         private readonly httpService: HttpService) {
     }
 
-    async search(request: ItiQuery, retry: number = 0, results: ItiLink[] = [] ): Promise<ItiLinkResponse|ItiError> {
-        if (await this.ensureLoggedIn()) {
-            try {
-                const result = await this.httpService.get(`${this.config.iti.host}/ajax.php`, {
-                    params: {
-                        i: 'main',
-                        which: request.query,
-                        s: (retry * 50) + 1,
-                        p: request.parent,
-                        c: request.child,
-                        o: 'null',
-                        what: 'null',
-                        series: 'null',
-                    },
-                    headers: {
-                        Cookie: this.cookie,
-                    },
-                }).toPromise();
-                const searchResults = result.data;
-                searchResults.shift();
-                searchResults.shift();
-                if (searchResults && searchResults.length > 0) {
-                    const filtered = searchResults.filter(link => this.filterSearchResult(link, request.query));
-                    results = results.concat(filtered);
-                    if (filtered.length < searchResults.length && results.length < 50) {
-                        return this.search(request, ++retry, results);
-                    }
+    async search(request: ItiQuery): Promise<ItiLinkResponse|ItiError> {
+        try {
+            request.page = request.page ? request.page : 1;
+            const $ = await this.requestParsed({
+                method: 'GET',
+                url: `${this.config.iti.host}/`,
+                params: {
+                    'category[]': this.categoryMap[request.parent],
+                    'section[]': this.sectionMap[request.child],
+                    'advs': 'y',
+                    'linksin': 'title',
+                    'addedby': 'anyone',
+                    'flall': request.query,
+                    'pg': request.page,
                 }
-                this.logService.logInfo('search', `Query: ${JSON.stringify(request)}. Found ${results.length} filtered results`);
+            });
+            if (!$) {
                 return {
-                    page: retry,
-                    results,
+                    error: 'search could not be completed',
                 };
             }
-            catch (e) {
-                console.log(e);
-                return e;
-            }
-        }
-        else {
+            const links: ItiLink[] = [];
+            $('#links .row').not('.header').each(function (i, el) {
+                const tags = [];
+                $(this).find('div a.utagsforlinks').each(function (i, el) {
+                    tags.push($(this).text());
+                });
+
+                links.push({
+                    linkid: $(this).find('a.poster').attr('href').replace('?i=SIG:', ''),
+                    title: $(this).find('a.poster .title > span:first-child').text(),
+                    parent: request.parent,
+                    child: request.child,
+                    user_tags: tags,
+                    tags: $(this).find('div.title span.tags').text().replace(request.child + ' ', '').split(' '),
+                    datetime: $(this).find('.date')[0].children.find(x => x.type === 'text').data.trimRight(),
+                    links_imgref: $(this).find('a.poster em img').attr('src'),
+
+                });
+            });
             return {
-                loggedIn: false,
+                results: links,
+                page: 1,
             };
         }
-    }
-
-    filterSearchResult(link: ItiLink, query: string) {
-        return query.split(' ').every(word =>
-            (link.parent === 'Movies' || link.parent === 'TV')
-                && link.title.toLowerCase().includes(word.toLowerCase()));
+        catch (e) {
+            console.error(e);
+        }
     }
 
     async getDetails(linkId: string): Promise<ItiDetails> {
-        if (await this.ensureLoggedIn()) {
-            try {
-                const result = await this.httpService.get(this.config.iti.host, {
-                    params: {
-                        i: `SIG:${linkId}`,
-                    },
-                    headers: {
-                        Cookie: this.cookie,
-                    },
-                }).toPromise();
-                const html = Cheerio.load(result.data);
-                const response = {
-                    imageref: this.getImageRefInPage(html),
-                    tags: this.getUserTags(html),
-                    info: this.getInfo(html),
-                };
-                return response;
-            }
-            catch (e) {
-                this.logService.logError('getDetails', 'Error getting Details', e);
-                return e;
-            }
+        try {
+            const result = await this.requestParsed({
+                method: 'GET',
+                url: this.config.iti.host,
+                params: {
+                    i: `SIG:${linkId}`,
+                }
+            });
+            const response = {
+                imageref: this.getImageRefInPage(result),
+                tags: this.getUserTags(result),
+                info: this.getInfo(result),
+            };
+            return response;
+        }
+        catch (e) {
+            this.logService.logError('getDetails', 'Error getting Details', e);
+            return e;
         }
     }
 
     async getLinks(linkId: string): Promise<string[]> {
-        if (await this.ensureLoggedIn()) {
-            try {
-                const result = await this.httpService.get(this.config.iti.host, {
-                    params: {
-                        i: `SIG:${linkId}`,
-                    },
-                    headers: {
-                        Cookie: this.cookie,
-                    },
-                }).toPromise();
-                return this.getLinksInPage(Cheerio.load(result.data));
-            }
-            catch (e) {
-                this.logService.logError('getLinks', 'Error getting links', e);
-                return e;
-            }
+        try {
+            const result = await this.requestParsed({
+                method: 'GET',
+                url: this.config.iti.host,
+                params: {
+                    i: `SIG:${linkId}`,
+                }
+            });
+            return this.getLinksInPage(result);
+        }
+        catch (e) {
+            this.logService.logError('getLinks', 'Error getting links', e);
+            return e;
         }
     }
 
     async getImageRef(linkId: string): Promise<string[]> {
-        if (await this.ensureLoggedIn()) {
-            try {
-                const result = await this.httpService.get(this.config.iti.host, {
-                    params: {
-                        i: `SIG:${linkId}`,
-                    },
-                    headers: {
-                        Cookie: this.cookie,
-                    },
-                }).toPromise();
-                return this.getImageRefInPage(Cheerio.load(result.data));
-            }
-            catch (e) {
-                this.logService.logError('getImageRef', 'Error getting imageRef', e);
-                return e;
-            }
+        try {
+            const result = await this.requestParsed({
+                method: 'GET',
+                url: this.config.iti.host,
+                params: {
+                    i: `SIG:${linkId}`,
+                }
+            });
+            return this.getImageRefInPage(result);
+        }
+        catch (e) {
+            this.logService.logError('getImageRef', 'Error getting imageRef', e);
+            return e;
         }
     }
 
@@ -195,6 +193,63 @@ export class ItiService {
         };
     }
 
+    private async requestParsed(request: AxiosRequestConfig, attempt: number = 0): Promise<CheerioStatic> {
+        try {
+            if (this.cookie) {
+                request.headers = request.headers || {};
+                request.headers.Cookie = this.cookie;
+            }
+            const result = await this.httpService.request(request).toPromise();
+            if (result.headers['set-cookie']) {
+                this.cookie = result.headers['set-cookie'][0];
+            }
+            const $ = Cheerio.load(result.data);
+            if (this.isLoggedIn($)) {
+                return $;
+            } else {
+                if (attempt < 2 && await this.login()) {
+                    return await this.requestParsed(request, ++attempt);
+                }
+                else {
+                    return null;
+                }
+            }
+        }
+        catch (e) {
+            return e;
+        }
+    }
+
+    private async login(retry: boolean = false): Promise<boolean> {
+        try {
+            const result = await this.httpService.post(this.config.iti.host, `user=${this.config.iti.user}&pass=${this.config.iti.pass}`, {
+                params: {
+                    i: 'redirect',
+                },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Cookie': this.cookie,
+                },
+                withCredentials: true,
+            }).toPromise();
+            return this.isLoggedIn(Cheerio.load(result.data));
+        }
+        catch (e) {
+            this.logService.logError('login', 'Failed to login', e);
+            return false;
+        }
+    }
+
+    private isLoggedIn($: CheerioStatic): boolean {
+        return $('#icon_logout').attr('href') !== undefined;
+    }
+
+    private filterSearchResult(link: ItiLink, query: string) {
+        return query.split(' ').every(word =>
+            (link.parent === 'Movies' || link.parent === 'TV')
+                && link.title.toLowerCase().includes(word.toLowerCase()));
+    }
+
     private getLinksInPage($: CheerioStatic): string[] {
         return $('div#links_mega a').toArray().map(x => x.attribs.href);
     }
@@ -212,51 +267,5 @@ export class ItiService {
         return $('div#utags button').toArray().map(x => x.children[0].data);
     }
 
-    private async ensureLoggedIn(): Promise<boolean> {
-        const status = await this.loginStatus();
-        if (status) {
-            return true;
-        } else {
-            return await this.login();
-        }
-
-    }
-
-    private async loginStatus(): Promise<boolean> {
-        try {
-            const headers: any = {};
-            if (this.cookie) {
-                headers.Cookie = this.cookie;
-            }
-            const result = await this.httpService.get(`${this.config.iti.host}`, { headers }).toPromise();
-            if (result.headers['set-cookie']) {
-                this.cookie = result.headers['set-cookie'][0];
-            }
-            return result.data.includes('<a id="icon_logout" href="?i=logout">');
-        }
-        catch (e) {
-            console.log(e);
-            return false;
-        }
-    }
-
-    private async login(retry: boolean = false): Promise<boolean> {
-        try {
-            const result = await this.httpService.post(this.config.iti.host, `user=${this.config.iti.user}&pass=${this.config.iti.pass}`, {
-                params: {
-                    i: 'redirect',
-                },
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Cookie': this.cookie,
-                },
-                withCredentials: true,
-            }).toPromise();
-            return result.data.includes('<a id="icon_logout" href="?i=logout">');
-        }
-        catch (e) {
-            console.log(e);
-            return false;
-        }
-    }
+    
 }
