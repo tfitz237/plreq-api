@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger } from '../shared/log/log.service';
+import { LogService } from '../shared/log/log.service';
 import { CronService } from './cron.service';
-import { CronSetup, CronJob } from '../models/cronjob';
+import { CronSetup, CronJob } from '../models';
 
 describe('CronService', () => {
   let service: CronService;
@@ -10,7 +10,7 @@ describe('CronService', () => {
   jest.useFakeTimers();
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CronService, {provide: Logger, useValue: { log: () => null}}],
+      providers: [CronService, {provide: LogService, useValue: { log: () => null}}],
     }).compile();
 
     service = module.get<CronService>(CronService);

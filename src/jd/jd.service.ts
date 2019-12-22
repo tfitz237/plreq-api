@@ -3,15 +3,13 @@ import * as jdApi from 'jdownloader-api';
 import { resolve } from 'url';
 import { CronService } from '../cron/cron.service';
 import { ItiService } from '../iti/iti.service';
-import { JdConnectResponse, JdInit, JdLink, JdPackage } from '../models/jdownloader';
+import { JdConnectResponse, JdInit, JdLink, JdPackage, LogLevel, IConfiguration } from '../models';
 import ConfigurationService from '../shared/configuration/configuration.service';
 import { JSONtryParse } from '../shared/functions';
-import { LogLevel } from '../shared/log/log.entry.entity';
-import { Logger } from '../shared/log/log.service';
+import { LogService } from '../shared/log/log.service';
 import { WsGateway } from '../ws/ws.gateway';
 import FileService from './file.service';
 import { UserLevel } from '../shared/constants';
-import { IConfiguration } from '../models/config';
 @Injectable()
 export class JdService {
 
@@ -35,7 +33,7 @@ export class JdService {
     constructor(private readonly fileService: FileService,
                 @Inject('Configuration')
                 private readonly config: IConfiguration,
-                private readonly logService: Logger,
+                private readonly logService: LogService,
                 private readonly itiService: ItiService,
                 private readonly cronService: CronService) {
     }

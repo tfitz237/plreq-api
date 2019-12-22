@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CronJob as Job } from 'cron';
-import { CronJob, CronSetup } from '../models/cronjob';
-import { Logger } from '../shared/log/log.service';
+import { CronJob, CronSetup } from '../models';
+import { LogService } from '../shared/log/log.service';
 import moment = require('moment-timezone');
 
 @Injectable()
 export class CronService {
     private jobs: CronJob[] = [];
-    constructor(private readonly logService: Logger) {
+    constructor(private readonly logService: LogService) {
     }
 
     setup({ jobName, interval, onTick, onComplete, description, autoStart = true }: CronSetup): number {

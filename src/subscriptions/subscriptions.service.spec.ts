@@ -5,7 +5,7 @@ import { CronService } from '../cron/cron.service';
 import { ItiService } from '../iti/iti.service';
 import { JdService } from '../jd/jd.service';
 import PlexDb from '../plex/plex.db';
-import { Logger } from '../shared/log/log.service';
+import { LogService } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MovieSubscription } from './movie-subscription.entity';
 import { SubscriptionsService } from './subscriptions.service';
@@ -19,7 +19,7 @@ describe('SubscriptionsService', () => {
         SubscriptionsService,
         {provide: getRepositoryToken(TvSubscription), useClass: Repository},
         {provide: getRepositoryToken(MovieSubscription), useClass: Repository},
-        {provide: Logger, useValue: {}},
+        {provide: LogService, useValue: {}},
         {provide: ItiService, useValue: {}},
         {provide: JdService, useValue: {}},
         {provide: TmdbService, useValue: {}},

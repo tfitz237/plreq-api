@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IConfiguration } from '../../models/config';
+import { IConfiguration } from '../../models';
 import { JSONtryParse } from '../functions';
 import Configurations from './configuration.entity';
 // tslint:disable-next-line: no-var-requires

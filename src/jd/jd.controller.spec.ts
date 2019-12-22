@@ -1,10 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RolesGuard } from '../auth/auth.roles';
-import {IConfiguration} from '../models/config';
-import { JdPackage } from '../models/jdownloader';
-import { IUser } from '../models/user';
-import ConfigurationService from '../shared/configuration/configuration.service';
-import FileService from './file.service';
+import { IConfiguration, JdPackage, IUser} from '../models';
 import { JdController } from './jd.controller';
 import { JdService } from './jd.service';
 
