@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import ConfigurationService from '../shared/configuration/configuration.service';
-import { Logger } from '../shared/log/log.service';
+import { LogService } from '../shared/log/log.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { ItiService } from './iti.service';
 
@@ -10,7 +10,7 @@ describe('ItiService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {provide: 'Configuration', useValue: {}},
-        {provide: Logger, useValue: {}},
+        {provide: LogService, useValue: {}},
         {provide: ItiService, useValue: {}},
         {provide: TmdbService, useValue: {}},
       ],

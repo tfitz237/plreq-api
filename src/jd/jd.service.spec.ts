@@ -93,7 +93,7 @@ describe('JdService', () => {
         {provide: 'Configuration', useValue: config},
         {provide: FileService, useValue: { moveVideos }},
         {provide: ItiService, useValue: {}},
-        {provide: Logger, useValue: {
+        {provide: LogService, useValue: {
           logInfo: (a, b) => {},
           logError: (a, b, c) => {},
         }},
