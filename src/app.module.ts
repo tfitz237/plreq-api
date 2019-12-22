@@ -10,10 +10,28 @@ import { SharedModule } from './shared/shared.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TmdbModule } from './tmdb/tmdb.module';
 import { WsModule } from './ws/ws.module';
+import { User } from './auth/auth.user.entity';
+import { MovieSubscription } from './subscriptions/movie-subscription.entity';
+import { TvEpisode } from './subscriptions/suscription.episode.entity';
+import { TvSubscription } from './subscriptions/tv-subscription.entity';
+import Configurations from './shared/configuration/configuration.entity';
+import { LogEntry } from './shared/log/log.entry.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(),
+    TypeOrmModule.forRoot({
+      type: 'sqlite',
+      database: 'db.sqlite3',
+      entities: [
+        User,
+        MovieSubscription,
+        TvEpisode,
+        TvSubscription,
+        Configurations,
+        LogEntry,
+      ],
+      synchronize: true,
+    }),
     JdModule,
     AuthModule,
     CronModule,
@@ -23,6 +41,7 @@ import { WsModule } from './ws/ws.module';
     PlexModule,
     SubscriptionsModule,
     TmdbModule,
+
   ],
   controllers: [AppController],
 })
