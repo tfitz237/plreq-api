@@ -48,7 +48,7 @@ export class ItiService {
                     'addedby': 'anyone',
                     'flall': request.query,
                     'pg': request.page,
-                }
+                },
             });
             if (!$) {
                 return {
@@ -76,7 +76,7 @@ export class ItiService {
             });
             return {
                 results: links,
-                page: 1,
+                page: request.page,
             };
         }
         catch (e) {
