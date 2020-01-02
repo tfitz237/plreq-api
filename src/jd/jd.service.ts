@@ -230,6 +230,7 @@ ${this.extractionErrorPackages.length} extract error
 
     async addLinks(linkId: string, packageName: string): Promise<JdInit> {
         const response = await this.initiate();
+        packageName = packageName.replace(/['"]/g, '_');
         if (response.success) {
             const packageExists = (await this.getPackages(false, null, false) as JdPackage[]) || [];
             if (packageExists && packageExists.length) {
@@ -251,10 +252,10 @@ ${this.extractionErrorPackages.length} extract error
                 await this.logService.logInfo('addLinks', `Added ${links.length} links under the name ${packageName}`);
                 return { success: true};
             } catch (e) {
-                await this.logService.logError('addLinks', `Error adding links`, e.error);
+                await this.logService.logError('addLinks', `Error adding links`, e);
                 throw new HttpException({
                     success: false,
-                    error: e.error,
+                    error: e,
                 }, 400);
             }
         } else {
